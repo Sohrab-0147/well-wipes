@@ -1,0 +1,12 @@
+package com.wellwipes.authservice.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@ConfigurationProperties(prefix = "wellwipes.jwt")
+public record JwtProperties(
+        String secret,
+        long accessTokenTtlSeconds,
+        long refreshTokenTtlSeconds,
+        String issuer
+) {
+}
