@@ -53,7 +53,7 @@ spring:
 
 wellwipes:
   jwt:
-    secret: ${JWT_SECRET:change-this-to-a-256-bit-random-string-at-least-32-chars-long-for-hs256}
+    secret: ${JWT_SECRET:...}
     access-token-ttl-seconds: ${JWT_ACCESS_TTL:900}
     refresh-token-ttl-seconds: ${JWT_REFRESH_TTL:604800}
     issuer: well-wipes-auth

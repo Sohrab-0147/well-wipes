@@ -1,11 +1,11 @@
 package com.wellwipes.authservice.security;
 
-import com.wellwipes.authservice.config.JwtProperties;
 import com.wellwipes.authservice.domain.RefreshToken;
 import com.wellwipes.authservice.domain.User;
 import com.wellwipes.authservice.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +24,10 @@ import java.util.UUID;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository repo;
-    private final JwtProperties props;
+
+    @Value("${wellwipes.jwt.refresh-token-ttl-seconds:604800}")
+    private long refreshTokenTtlSeconds;
+
     private final SecureRandom random = new SecureRandom();
 
     @Transactional
@@ -33,30 +36,25 @@ public class RefreshTokenService {
         RefreshToken token = RefreshToken.builder()
                 .user(user)
                 .tokenHash(hash(raw))
-                .expiresAt(Instant.now().plusSeconds(props.refreshTokenTtlSeconds()))
+                .expiresAt(Instant.now().plusSeconds(refreshTokenTtlSeconds))
                 .build();
         repo.save(token);
         return raw;
     }
 
-    /**
-     * Validate and rotate. If the token is valid, revoke it and issue a new one.
-     * If an already-revoked token is presented, revoke ALL tokens for that user
-     * (reuse detection — signals possible theft).
-     */
     @Transactional
     public RotationResult rotate(String rawToken) {
         RefreshToken existing = repo.findByTokenHash(hash(rawToken))
-                .orElseThrow(() -> new InvalidTokenException("Refresh token not found"));
+                .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token not found"));
 
         if (Boolean.TRUE.equals(existing.getRevoked())) {
             log.warn("Reuse of revoked refresh token detected for user {}", existing.getUser().getId());
             repo.revokeAllByUserId(existing.getUser().getId(), Instant.now());
-            throw new InvalidTokenException("Refresh token has been revoked");
+            throw new InvalidRefreshTokenException("Refresh token has been revoked");
         }
 
         if (existing.getExpiresAt().isBefore(Instant.now())) {
-            throw new InvalidTokenException("Refresh token has expired");
+            throw new InvalidRefreshTokenException("Refresh token has expired");
         }
 
         String newRaw = issue(existing.getUser());

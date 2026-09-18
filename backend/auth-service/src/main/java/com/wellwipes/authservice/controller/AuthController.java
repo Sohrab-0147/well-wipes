@@ -4,17 +4,15 @@ import com.wellwipes.authservice.domain.User;
 import com.wellwipes.authservice.dto.RefreshResponse;
 import com.wellwipes.authservice.dto.UserResponse;
 import com.wellwipes.authservice.repository.UserRepository;
-import com.wellwipes.authservice.security.InvalidTokenException;
 import com.wellwipes.authservice.security.JwtService;
 import com.wellwipes.authservice.security.RefreshTokenService;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.UUID;
 
@@ -30,9 +28,10 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> me(@AuthenticationPrincipal String userId) {
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new InvalidTokenException("User not found"));
+    public ResponseEntity<UserResponse> me(@AuthenticationPrincipal Jwt jwt) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         return ResponseEntity.ok(new UserResponse(
                 user.getId(), user.getEmail(), user.getFullName(), user.getAvatarUrl(), user.getRole()
         ));
@@ -44,9 +43,8 @@ public class AuthController {
             HttpServletResponse response
     ) {
         if (refreshToken == null) {
-            throw new InvalidTokenException("Missing refresh cookie");
+            return ResponseEntity.status(401).build();
         }
-
         var result = refreshTokenService.rotate(refreshToken);
         String newAccessToken = jwtService.issueAccessToken(result.user());
 
@@ -68,11 +66,9 @@ public class AuthController {
     ) {
         if (refreshToken != null) {
             try {
-                refreshTokenService.revokeAll(
-                        refreshTokenService.rotate(refreshToken).user().getId()
-                );
-            } catch (InvalidTokenException ignored) {
-                // Already invalid — nothing to revoke.
+                var rotated = refreshTokenService.rotate(refreshToken);
+                refreshTokenService.revokeAll(rotated.user().getId());
+            } catch (RuntimeException ignored) {
             }
         }
         Cookie kill = new Cookie(REFRESH_COOKIE, "");
