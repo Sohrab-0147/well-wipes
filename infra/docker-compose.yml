@@ -1,4 +1,13 @@
 services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: wellwipes-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - wellwipes-net
   postgres-auth:
     image: pgvector/pgvector:pg16
     container_name: wellwipes-postgres-auth
@@ -160,3 +169,4 @@ volumes:
   redis-data:
   kafka-data:
   pgadmin-data:
+  ollama-data:

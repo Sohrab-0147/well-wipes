@@ -50,31 +50,23 @@ public class ProductService {
         return productMapper.toResponse(product);
     }
 
-    @Cacheable(cacheNames = CacheConfig.PRODUCT_LISTS,
-            key = "'page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize + ':' + #pageable.sort")
     @Transactional(readOnly = true)
     public Page<ProductSummaryResponse> listActive(Pageable pageable) {
         return productRepository.findByActiveTrue(pageable).map(productMapper::toSummary);
     }
 
-    @Cacheable(cacheNames = CacheConfig.PRODUCT_LISTS,
-            key = "'cat:' + #categoryId + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public Page<ProductSummaryResponse> listByCategory(UUID categoryId, Pageable pageable) {
         return productRepository.findByActiveTrueAndCategoryId(categoryId, pageable)
                 .map(productMapper::toSummary);
     }
 
-    @Cacheable(cacheNames = CacheConfig.PRODUCT_LISTS,
-            key = "'featured:page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public Page<ProductSummaryResponse> listFeatured(Pageable pageable) {
         return productRepository.findByActiveTrueAndFeaturedTrue(pageable)
                 .map(productMapper::toSummary);
     }
 
-    @Cacheable(cacheNames = CacheConfig.PRODUCT_LISTS,
-            key = "'search:' + #q + ':page:' + #pageable.pageNumber + ':size:' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public Page<ProductSummaryResponse> search(String q, Pageable pageable) {
         return productRepository.search(q, pageable).map(productMapper::toSummary);

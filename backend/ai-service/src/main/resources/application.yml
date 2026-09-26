@@ -1,0 +1,51 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: ai-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5436/wellwipes_ai
+    username: wellwipes
+    password: changeme
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 8
+      minimum-idle: 2
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      embedding:
+        options:
+          model: nomic-embed-text
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        dimensions: 768
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+
+wellwipes:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: well-wipes-auth
+  groq:
+    api-key: ${GROQ_API_KEY}
+    base-url: https://api.groq.com/openai
+    model: openai/gpt-oss-120b
+  services:
+    product-service:
+      url: http://localhost:8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.wellwipes.aiservice: DEBUG
+    org.springframework.ai: INFO
