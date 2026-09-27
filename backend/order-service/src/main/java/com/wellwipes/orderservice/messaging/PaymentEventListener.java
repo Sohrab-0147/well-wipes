@@ -2,11 +2,11 @@ package com.wellwipes.orderservice.messaging;
 
 import com.wellwipes.common.event.PaymentFailedEvent;
 import com.wellwipes.common.event.PaymentSucceededEvent;
-import com.wellwipes.orderservice.domain.Order;
 import com.wellwipes.orderservice.domain.OrderStatus;
 import com.wellwipes.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,15 +18,18 @@ public class PaymentEventListener {
 
     private final OrderRepository orderRepository;
 
-    @KafkaListener(topics = "payment-events", groupId = "order-service")
+    @KafkaListener(topics = "payment-events")
     @Transactional
-    public void onPaymentEvent(Object event) {
+    public void onPaymentEvent(ConsumerRecord<String, Object> record) {
+        Object event = record.value();
+        log.debug("Received payment event: {}", event == null ? "null" : event.getClass().getSimpleName());
+
         if (event instanceof PaymentSucceededEvent succeeded) {
             handleSucceeded(succeeded);
         } else if (event instanceof PaymentFailedEvent failed) {
             handleFailed(failed);
         } else {
-            log.debug("Ignoring unknown payment event: {}", event);
+            log.warn("Unknown payment event type: {}", event);
         }
     }
 
@@ -40,7 +43,7 @@ public class PaymentEventListener {
             order.setPaymentId(event.paymentId());
             orderRepository.save(order);
             log.info("Order {} marked PAID", order.getId());
-        }, () -> log.warn("Received PaymentSucceeded for unknown order {}", event.orderId()));
+        }, () -> log.warn("PaymentSucceeded for unknown order {}", event.orderId()));
     }
 
     private void handleFailed(PaymentFailedEvent event) {

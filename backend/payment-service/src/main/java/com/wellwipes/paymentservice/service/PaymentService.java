@@ -3,6 +3,7 @@ package com.wellwipes.paymentservice.service;
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
+import com.wellwipes.common.event.PaymentSucceededEvent;
 import com.wellwipes.paymentservice.domain.Payment;
 import com.wellwipes.paymentservice.domain.PaymentStatus;
 import com.wellwipes.paymentservice.dto.CheckoutLineItem;
@@ -11,6 +12,7 @@ import com.wellwipes.paymentservice.dto.CheckoutResponse;
 import com.wellwipes.paymentservice.dto.PaymentResponse;
 import com.wellwipes.paymentservice.exception.PaymentNotFoundException;
 import com.wellwipes.paymentservice.exception.PaymentProcessingException;
+import com.wellwipes.paymentservice.messaging.PaymentEventPublisher;
 import com.wellwipes.paymentservice.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ import java.util.UUID;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final PaymentEventPublisher publisher;
 
     @Value("${wellwipes.stripe.success-url}")
     private String successUrl;
@@ -87,6 +90,55 @@ public class PaymentService {
     public PaymentResponse getByOrderId(UUID orderId) {
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new PaymentNotFoundException("Payment not found for order: " + orderId));
+        return toResponse(payment);
+    }
+
+    /**
+     * Reconcile payment status by asking Stripe directly. Used as a fallback
+     * when the webhook is delayed, missed, or cannot be verified locally.
+     */
+    @Transactional
+    public PaymentResponse syncStatus(UUID orderId) {
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found for order: " + orderId));
+
+        if (payment.getStatus() == PaymentStatus.SUCCEEDED) {
+            return toResponse(payment);
+        }
+
+        if (payment.getStripeSessionId() == null) {
+            throw new PaymentProcessingException("Payment has no Stripe session");
+        }
+
+        Session session;
+        try {
+            session = Session.retrieve(payment.getStripeSessionId());
+        } catch (StripeException ex) {
+            log.error("Stripe session retrieve failed for {}", payment.getStripeSessionId(), ex);
+            throw new PaymentProcessingException("Stripe lookup failed: " + ex.getMessage(), ex);
+        }
+
+        String sessionStatus = session.getStatus();
+        String paymentStatus = session.getPaymentStatus();
+        log.info("Sync check: session={} status={} payment_status={}",
+                session.getId(), sessionStatus, paymentStatus);
+
+        if ("complete".equals(sessionStatus) && "paid".equals(paymentStatus)) {
+            payment.setStatus(PaymentStatus.SUCCEEDED);
+            payment.setStripePaymentIntentId(session.getPaymentIntent());
+            paymentRepository.save(payment);
+
+            publisher.publishSucceeded(PaymentSucceededEvent.of(
+                    payment.getId(), payment.getOrderId(), payment.getUserId(),
+                    payment.getAmountCents(), payment.getCurrency(), payment.getStripeSessionId()
+            ));
+            log.info("Payment {} reconciled as SUCCEEDED, event published", payment.getId());
+        } else if ("expired".equals(sessionStatus)) {
+            payment.setStatus(PaymentStatus.EXPIRED);
+            payment.setFailureReason("Checkout session expired");
+            paymentRepository.save(payment);
+        }
+
         return toResponse(payment);
     }
 

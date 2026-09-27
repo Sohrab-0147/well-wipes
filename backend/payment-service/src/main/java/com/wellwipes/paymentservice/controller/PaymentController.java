@@ -31,4 +31,10 @@ public class PaymentController {
                                       @PathVariable UUID orderId) {
         return paymentService.getByOrderId(orderId);
     }
+
+    @PostMapping("/sync/{orderId}")
+    public PaymentResponse sync(@AuthenticationPrincipal Jwt jwt,
+                                @PathVariable UUID orderId) {
+        return paymentService.syncStatus(orderId);
+    }
 }

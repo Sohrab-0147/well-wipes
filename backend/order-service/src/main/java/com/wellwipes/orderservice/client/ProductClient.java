@@ -21,11 +21,12 @@ public class ProductClient {
     @Value("${wellwipes.services.product-service.url}")
     private String productServiceUrl;
 
-    public ProductSnapshot getProduct(UUID productId) {
+    public ProductSnapshot getProduct(UUID productId, String bearerToken) {
         try {
             return restClientBuilder.build()
                     .get()
                     .uri(productServiceUrl + "/api/v1/products/id/{id}", productId)
+                    .header("Authorization", "Bearer " + bearerToken)
                     .retrieve()
                     .body(ProductSnapshot.class);
         } catch (RestClientException ex) {

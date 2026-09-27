@@ -43,7 +43,7 @@ public class OrderService {
         String currency = "INR";
 
         for (CreateOrderItemRequest item : request.items()) {
-            ProductSnapshot product = productClient.getProduct(item.productId());
+            ProductSnapshot product = productClient.getProduct(item.productId(), bearerToken);
             if (product == null || !Boolean.TRUE.equals(product.active())) {
                 throw new InvalidOrderStateException("Product unavailable: " + item.productId());
             }
@@ -136,7 +136,32 @@ public class OrderService {
         return toResponse(order, null);
     }
 
-    private OrderResponse toResponse(Order order, String checkoutUrl) {
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> listAllForAdmin(Pageable pageable) {
+        return orderRepository.findAllByOrderByCreatedAtDesc(pageable)
+                .map(o -> toResponse(o, null));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> listAllByStatus(OrderStatus status, Pageable pageable) {
+        return orderRepository.findByStatusOrderByCreatedAtDesc(status, pageable)
+                .map(o -> toResponse(o, null));
+    }
+
+    @Transactional(readOnly = true)
+    public OrderStatsResponse getStats() {
+        return new OrderStatsResponse(
+                orderRepository.count(),
+                orderRepository.countByStatus(OrderStatus.PAID),
+                orderRepository.countByStatus(OrderStatus.PENDING),
+                orderRepository.countByStatus(OrderStatus.FAILED),
+                orderRepository.countByStatus(OrderStatus.CANCELLED),
+                orderRepository.sumTotalByStatus(OrderStatus.PAID),
+                "INR"
+        );
+    }
+
+    public OrderResponse toResponse(Order order, String checkoutUrl) {
         List<OrderItemResponse> itemResponses = order.getItems().stream()
                 .map(i -> new OrderItemResponse(
                         i.getId(), i.getProductId(), i.getSku(), i.getName(),

@@ -1,0 +1,26 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: admin-service
+
+wellwipes:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: well-wipes-auth
+  services:
+    order-service:
+      url: http://localhost:8084
+    product-service:
+      url: http://localhost:8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.wellwipes.adminservice: DEBUG
