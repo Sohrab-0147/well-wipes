@@ -8,6 +8,7 @@ import { toast } from '@/lib/toastStore';
 import { cn } from '@/lib/utils';
 import { LogoMark } from './Logo';
 import { NavSearch } from './NavSearch';
+import { ThemeToggle } from './ThemeToggle';
 import { AiChatWidget } from '@/features/ai/AiChatWidget';
 import { CartDrawer } from '@/features/cart/CartDrawer';
 import { useCartDrawerStore } from '@/features/cart/cartDrawerStore';
@@ -137,6 +138,8 @@ export function Layout() {
             </button>
 
             {/* Cart */}
+            <ThemeToggle />
+
             <button
               onClick={() => useCartDrawerStore.getState().openDrawer()}
               className="relative flex h-9 items-center gap-2 rounded-full px-3 text-ink-soft transition-all duration-200 hover:bg-slate-tint hover:text-ink"

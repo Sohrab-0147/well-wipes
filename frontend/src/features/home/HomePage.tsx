@@ -180,6 +180,94 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ═══════════════ ALL PRODUCTS (progressive load) ═══════════════ */}
+      <section className="bg-slate-tint">
+        <div className="page-container section-pad">
+          <div className="mb-12 flex items-end justify-between gap-6">
+            <div>
+              <p className="eyebrow text-sky">Shop our range</p>
+              <h2 className="mt-3 heading-section">
+                Loved by thousands
+                <br />
+                of Indian homes
+              </h2>
+              {totalAvailable > 0 && (
+                <p className="mt-3 text-sm text-ink-soft">
+                  Showing {loadedCount} of {totalAvailable} product{totalAvailable !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+            <Link
+              to="/products"
+              className="hidden items-center gap-1 text-sm font-semibold text-sky hover:text-sky-dark sm:inline-flex"
+            >
+              View full shop
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {products.isLoading && (
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: INITIAL_COUNT }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-square rounded-3xl bg-paper" />
+                  <div className="mt-4 h-4 w-3/4 rounded-full bg-paper" />
+                  <div className="mt-2 h-4 w-1/2 rounded-full bg-paper" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {products.data && products.data.content.length === 0 && (
+            <div className="rounded-3xl border border-line bg-paper p-16 text-center">
+              <Package className="mx-auto h-8 w-8 text-ink-mute" />
+              <p className="mt-4 text-sm font-medium text-ink-soft">
+                No products yet.
+              </p>
+            </div>
+          )}
+
+          {products.data && products.data.content.length > 0 && (
+            <>
+              <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
+                {products.data.content.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+
+              {/* Show more / View all */}
+              <div className="mt-12 flex flex-col items-center gap-3">
+                {hasMore ? (
+                  <>
+                    <button
+                      onClick={handleShowMore}
+                      disabled={loadingMore || products.isFetching}
+                      className="btn-secondary"
+                    >
+                      {products.isFetching ? 'Loading…' : 'Show more products'}
+                      <ArrowRight className="h-4 w-4 rotate-90" />
+                    </button>
+                    <p className="text-xs text-ink-mute">
+                      {totalAvailable - loadedCount} more to load
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-medium uppercase tracking-wider text-ink-mute">
+                      You've seen the entire range
+                    </p>
+                    <Link to="/products" className="btn-glow">
+                      Open full shop with filters
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
       {/* ═══════════════ SHOP BY TISSUE TYPE ═══════════════ */}
       <section className="page-container section-pad">
         <div className="reveal mb-12 text-center">
@@ -239,94 +327,6 @@ export function HomePage() {
               <ArrowRight className="h-3 w-3" />
             </div>
           </Link>
-        </div>
-      </section>
-
-      {/* ═══════════════ ALL PRODUCTS (progressive load) ═══════════════ */}
-      <section className="bg-slate-tint">
-        <div className="page-container section-pad">
-          <div className="reveal mb-12 flex items-end justify-between gap-6">
-            <div>
-              <p className="eyebrow text-sky">Shop our range</p>
-              <h2 className="mt-3 heading-section">
-                Loved by thousands
-                <br />
-                of Indian homes
-              </h2>
-              {totalAvailable > 0 && (
-                <p className="mt-3 text-sm text-ink-soft">
-                  Showing {loadedCount} of {totalAvailable} product{totalAvailable !== 1 ? 's' : ''}
-                </p>
-              )}
-            </div>
-            <Link
-              to="/products"
-              className="hidden items-center gap-1 text-sm font-semibold text-sky hover:text-sky-dark sm:inline-flex"
-            >
-              View full shop
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {products.isLoading && (
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-              {Array.from({ length: INITIAL_COUNT }).map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="aspect-square rounded-3xl bg-paper" />
-                  <div className="mt-4 h-4 w-3/4 rounded-full bg-paper" />
-                  <div className="mt-2 h-4 w-1/2 rounded-full bg-paper" />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {products.data && products.data.content.length === 0 && (
-            <div className="rounded-3xl border border-line bg-paper p-16 text-center">
-              <Package className="mx-auto h-8 w-8 text-ink-mute" />
-              <p className="mt-4 text-sm font-medium text-ink-soft">
-                No products yet.
-              </p>
-            </div>
-          )}
-
-          {products.data && products.data.content.length > 0 && (
-            <>
-              <div className="reveal grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-                {products.data.content.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
-
-              {/* Show more / View all */}
-              <div className="mt-12 flex flex-col items-center gap-3">
-                {hasMore ? (
-                  <>
-                    <button
-                      onClick={handleShowMore}
-                      disabled={loadingMore || products.isFetching}
-                      className="btn-secondary"
-                    >
-                      {products.isFetching ? 'Loading…' : 'Show more products'}
-                      <ArrowRight className="h-4 w-4 rotate-90" />
-                    </button>
-                    <p className="text-xs text-ink-mute">
-                      {totalAvailable - loadedCount} more to load
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-xs font-medium uppercase tracking-wider text-ink-mute">
-                      You've seen the entire range
-                    </p>
-                    <Link to="/products" className="btn-glow">
-                      Open full shop with filters
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </>
-                )}
-              </div>
-            </>
-          )}
         </div>
       </section>
 

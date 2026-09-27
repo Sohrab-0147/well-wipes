@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
@@ -9,14 +10,36 @@ export default {
         hand: ['Caveat', 'cursive'],
       },
       colors: {
-        paper: '#ffffff',
-        slate: { tint: '#f8fafc', soft: '#f1f5f9' },
-        line: '#e2e8f0',
-        'line-strong': '#cbd5e1',
-        ink: { DEFAULT: '#0a1628', soft: '#475569', mute: '#94a3b8' },
-        sky: { DEFAULT: '#0284c7', dark: '#0369a1', deep: '#075985', light: '#38bdf8', soft: '#bae6fd', tint: '#e0f2fe' },
-        mint: { DEFAULT: '#5eead4', dark: '#14b8a6', tint: '#f0fdfa' },
-        clay: { DEFAULT: '#c96f4a', dark: '#a85532', tint: '#fbf0ea' },
+        paper: 'rgb(var(--paper) / <alpha-value>)',
+        slate: {
+          tint: 'rgb(var(--slate-tint) / <alpha-value>)',
+          soft: 'rgb(var(--slate-soft) / <alpha-value>)',
+        },
+        line: 'rgb(var(--line) / <alpha-value>)',
+        'line-strong': 'rgb(var(--line-strong) / <alpha-value>)',
+        ink: {
+          DEFAULT: 'rgb(var(--ink) / <alpha-value>)',
+          soft: 'rgb(var(--ink-soft) / <alpha-value>)',
+          mute: 'rgb(var(--ink-mute) / <alpha-value>)',
+        },
+        sky: {
+          DEFAULT: '#0284c7',
+          dark: '#0369a1',
+          deep: '#075985',
+          light: '#38bdf8',
+          soft: 'rgb(var(--sky-soft) / <alpha-value>)',
+          tint: 'rgb(var(--sky-tint) / <alpha-value>)',
+        },
+        mint: {
+          DEFAULT: '#5eead4',
+          dark: '#14b8a6',
+          tint: 'rgb(var(--mint-tint) / <alpha-value>)',
+        },
+        clay: {
+          DEFAULT: '#c96f4a',
+          dark: '#a85532',
+          tint: 'rgb(var(--clay-tint) / <alpha-value>)',
+        },
       },
       fontSize: {
         '2xs': ['0.6875rem', { lineHeight: '1rem', letterSpacing: '0.02em' }],
