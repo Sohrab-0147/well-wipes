@@ -11,6 +11,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/orders/admin")
 @RequiredArgsConstructor
@@ -34,5 +37,14 @@ public class AdminOrderController {
     @GetMapping("/stats")
     public OrderStatsResponse stats() {
         return orderService.getStats();
+    }
+
+    @PatchMapping("/{id}/status")
+    public OrderResponse updateStatus(@PathVariable UUID id, @RequestBody Map<String, String> body) {
+        String status = body.get("status");
+        if (status == null || status.isBlank()) {
+            throw new IllegalArgumentException("status is required");
+        }
+        return orderService.updateStatus(id, OrderStatus.valueOf(status.toUpperCase()));
     }
 }

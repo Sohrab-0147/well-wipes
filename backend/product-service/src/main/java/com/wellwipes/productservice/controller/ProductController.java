@@ -47,6 +47,16 @@ public class ProductController {
         return productService.listActive(pageable);
     }
 
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Page<ProductSummaryResponse> adminList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size
+    ) {
+        size = Math.min(size, 200);
+        return productService.listAll(page, size);
+    }
+
     @GetMapping("/{slug}")
     public ProductResponse getBySlug(@PathVariable String slug) {
         return productService.getBySlug(slug);

@@ -8,6 +8,8 @@ public record OrderPlacedEvent(
         UUID eventId,
         UUID orderId,
         UUID userId,
+        String userEmail,
+        String userFullName,
         Long totalCents,
         String currency,
         List<Item> items,
@@ -15,7 +17,11 @@ public record OrderPlacedEvent(
 ) {
     public record Item(UUID productId, String sku, String name, Long unitPriceCents, Integer quantity) {}
 
-    public static OrderPlacedEvent of(UUID orderId, UUID userId, Long totalCents, String currency, List<Item> items) {
-        return new OrderPlacedEvent(UUID.randomUUID(), orderId, userId, totalCents, currency, items, Instant.now());
+    public static OrderPlacedEvent of(UUID orderId, UUID userId, String userEmail, String userFullName,
+                                      Long totalCents, String currency, List<Item> items) {
+        return new OrderPlacedEvent(
+                UUID.randomUUID(), orderId, userId, userEmail, userFullName,
+                totalCents, currency, items, Instant.now()
+        );
     }
 }

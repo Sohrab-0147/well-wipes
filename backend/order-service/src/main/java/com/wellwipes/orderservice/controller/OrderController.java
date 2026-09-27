@@ -2,6 +2,7 @@ package com.wellwipes.orderservice.controller;
 
 import com.wellwipes.orderservice.dto.CreateOrderRequest;
 import com.wellwipes.orderservice.dto.OrderResponse;
+import com.wellwipes.orderservice.service.InvoiceService;
 import com.wellwipes.orderservice.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -21,6 +24,7 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final InvoiceService invoiceService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -28,8 +32,10 @@ public class OrderController {
                                 @RequestHeader("Authorization") String authorization,
                                 @Valid @RequestBody CreateOrderRequest request) {
         UUID userId = UUID.fromString(jwt.getSubject());
+        String userEmail = jwt.getClaimAsString("email");
+        String userFullName = jwt.getClaimAsString("name");
         String bearerToken = authorization.substring(7);
-        return orderService.create(userId, bearerToken, request);
+        return orderService.create(userId, userEmail, userFullName, bearerToken, request);
     }
 
     @GetMapping
@@ -54,5 +60,21 @@ public class OrderController {
         UUID userId = UUID.fromString(jwt.getSubject());
         boolean isAdmin = "ADMIN".equals(jwt.getClaimAsString("role"));
         return orderService.cancel(id, userId, isAdmin);
+    }
+
+    @GetMapping("/{id}/invoice")
+    public org.springframework.http.ResponseEntity<byte[]> invoice(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID id) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        boolean isAdmin = "ADMIN".equals(jwt.getClaimAsString("role"));
+        var order = orderService.getById(id, userId, isAdmin);
+        byte[] pdf = invoiceService.generate(
+                orderService.getEntityById(id, userId, isAdmin));
+        return org.springframework.http.ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=invoice-" + id.toString().substring(0, 8) + ".pdf")
+                .body(pdf);
     }
 }

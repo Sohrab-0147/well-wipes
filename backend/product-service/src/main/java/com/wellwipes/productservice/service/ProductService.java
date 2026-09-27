@@ -141,4 +141,12 @@ public class ProductService {
         }
         productRepository.deleteById(id);
     }
+
+    @Transactional(readOnly = true)
+    public Page<ProductSummaryResponse> listAll(int page, int size) {
+        var pageable = org.springframework.data.domain.PageRequest.of(
+                page, size,
+                org.springframework.data.domain.Sort.by("createdAt").descending());
+        return productRepository.findAll(pageable).map(productMapper::toSummary);
+    }
 }

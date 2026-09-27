@@ -37,7 +37,7 @@ public class OrderService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public OrderResponse create(UUID userId, String bearerToken, CreateOrderRequest request) {
+    public OrderResponse create(UUID userId, String userEmail, String userFullName, String bearerToken, CreateOrderRequest request) {
         List<OrderItem> items = new ArrayList<>();
         long totalCents = 0L;
         String currency = "INR";
@@ -94,7 +94,8 @@ public class OrderService {
                 .toList();
 
         OrderPlacedEvent event = OrderPlacedEvent.of(
-                saved.getId(), userId, saved.getTotalCents(), saved.getCurrency(), eventItems);
+                saved.getId(), userId, userEmail, userFullName,
+                saved.getTotalCents(), saved.getCurrency(), eventItems);
 
         outboxRepository.save(OutboxEvent.builder()
                 .aggregateId(saved.getId())
@@ -173,5 +174,24 @@ public class OrderService {
                 order.getStripeSessionId(), checkoutUrl,
                 itemResponses, order.getCreatedAt(), order.getUpdatedAt()
         );
+    }
+
+    @Transactional
+    public OrderResponse updateStatus(UUID orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found: " + orderId));
+        order.setStatus(newStatus);
+        orderRepository.save(order);
+        return toResponse(order, null);
+    }
+
+    @Transactional(readOnly = true)
+    public Order getEntityById(UUID orderId, UUID requesterId, boolean isAdmin) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found: " + orderId));
+        if (!isAdmin && !order.getUserId().equals(requesterId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Not your order");
+        }
+        return order;
     }
 }
