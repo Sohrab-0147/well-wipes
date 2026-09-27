@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
@@ -23,6 +24,7 @@ function statusClass(status: Order['status']) {
 }
 
 export function OrdersPage() {
+  usePageTitle('My orders');
   const { data, isLoading } = useQuery({
     queryKey: ['orders'],
     queryFn: () => orderApi.list(0, 20),

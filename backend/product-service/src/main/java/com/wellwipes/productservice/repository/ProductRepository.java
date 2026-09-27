@@ -41,4 +41,12 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
           )
     """)
     Page<Product> search(@Param("q") String q, Pageable pageable);
+
+    @EntityGraph(attributePaths = "category")
+    @Query("""
+        SELECT p FROM Product p
+        WHERE p.active = true AND p.stockQuantity <= p.lowStockThreshold
+        ORDER BY p.stockQuantity ASC, p.name ASC
+    """)
+    java.util.List<Product> findLowStock();
 }

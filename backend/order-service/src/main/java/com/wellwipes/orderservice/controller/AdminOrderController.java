@@ -3,6 +3,7 @@ package com.wellwipes.orderservice.controller;
 import com.wellwipes.orderservice.domain.OrderStatus;
 import com.wellwipes.orderservice.dto.OrderResponse;
 import com.wellwipes.orderservice.dto.OrderStatsResponse;
+import com.wellwipes.orderservice.dto.AnalyticsResponse;
 import com.wellwipes.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,5 +47,11 @@ public class AdminOrderController {
             throw new IllegalArgumentException("status is required");
         }
         return orderService.updateStatus(id, OrderStatus.valueOf(status.toUpperCase()));
+    }
+
+    @GetMapping("/analytics")
+    public AnalyticsResponse analytics(@RequestParam(defaultValue = "30") int days) {
+        int bounded = Math.min(Math.max(days, 7), 90);
+        return orderService.getAnalytics(bounded);
     }
 }

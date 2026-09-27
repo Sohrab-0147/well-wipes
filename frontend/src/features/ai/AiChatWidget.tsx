@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Loader2, MessageCircle, Send, Sparkles, X } from 'lucide-react';
 import { apiClient } from '@/api/client';
 import { StackMark } from '@/components/ProductImage';
+import { AbdulAvatar } from './AbdulAvatar';
 import { cn } from '@/lib/utils';
 
 interface Source {
@@ -164,9 +165,7 @@ export function AiChatWidget() {
         style={{ maxHeight: 'min(620px, calc(100vh - 8rem))' }}
       >
         <div className="flex items-center gap-3 border-b border-line bg-gradient-to-r from-sky-tint via-paper to-mint-tint px-5 py-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky text-white shadow-glow-sm">
-            <StackMark className="h-4 w-4" />
-          </div>
+          <AbdulAvatar className="h-9 w-9" />
           <div className="flex-1">
             <p className="text-sm font-bold text-ink">Ask Abdul</p>
             <p className="text-[11px] text-ink-soft">
@@ -221,9 +220,7 @@ export function AiChatWidget() {
 
           {loading && (
             <div className="flex items-start gap-3">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-2xl bg-sky text-white">
-                <StackMark className="h-3.5 w-3.5" />
-              </div>
+              <AbdulAvatar className="h-7 w-7" />
               <div className="flex items-center gap-2 rounded-2xl bg-slate-tint px-4 py-2.5 text-sm text-ink-soft">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Thinking…

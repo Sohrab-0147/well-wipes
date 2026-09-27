@@ -119,3 +119,21 @@ export const adminProductApi = {
     await apiClient.delete(`/api/v1/products/${id}`);
   },
 };
+
+
+export interface LowStockItem {
+  id: string;
+  sku: string;
+  name: string;
+  slug: string;
+  stockQuantity: number;
+  lowStockThreshold: number;
+  categoryName: string | null;
+}
+
+export const lowStockApi = {
+  async list(): Promise<LowStockItem[]> {
+    const res = await apiClient.get<LowStockItem[]>('/api/v1/products/admin/low-stock');
+    return res.data;
+  },
+};

@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Heart, Leaf, Package, Users } from 'lucide-react';
 import { StackMark } from '@/components/ProductImage';
@@ -27,6 +28,7 @@ const values = [
 ];
 
 export function AboutPage() {
+  usePageTitle('Our story');
   useScrollReveal();
 
   return (

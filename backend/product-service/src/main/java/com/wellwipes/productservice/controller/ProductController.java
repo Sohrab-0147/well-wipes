@@ -2,6 +2,7 @@ package com.wellwipes.productservice.controller;
 
 import com.wellwipes.productservice.dto.CreateProductRequest;
 import com.wellwipes.productservice.dto.ProductResponse;
+import com.wellwipes.productservice.dto.LowStockItem;
 import com.wellwipes.productservice.dto.ProductSummaryResponse;
 import com.wellwipes.productservice.dto.UpdateProductRequest;
 import com.wellwipes.productservice.service.ProductService;
@@ -85,5 +86,11 @@ public class ProductController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         productService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/admin/low-stock")
+    @PreAuthorize("hasRole('ADMIN')")
+    public java.util.List<LowStockItem> lowStock() {
+        return productService.getLowStock();
     }
 }

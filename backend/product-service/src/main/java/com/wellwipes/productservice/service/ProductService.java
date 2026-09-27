@@ -6,6 +6,7 @@ import com.wellwipes.productservice.domain.Product;
 import com.wellwipes.productservice.dto.CreateProductRequest;
 import com.wellwipes.productservice.dto.ProductResponse;
 import com.wellwipes.productservice.dto.ProductSummaryResponse;
+import com.wellwipes.productservice.dto.LowStockItem;
 import com.wellwipes.productservice.dto.UpdateProductRequest;
 import com.wellwipes.productservice.exception.DuplicateResourceException;
 import com.wellwipes.productservice.exception.ProductNotFoundException;
@@ -148,5 +149,20 @@ public class ProductService {
                 page, size,
                 org.springframework.data.domain.Sort.by("createdAt").descending());
         return productRepository.findAll(pageable).map(productMapper::toSummary);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<LowStockItem> getLowStock() {
+        return productRepository.findLowStock().stream()
+                .map(p -> new LowStockItem(
+                        p.getId(),
+                        p.getSku(),
+                        p.getName(),
+                        p.getSlug(),
+                        p.getStockQuantity(),
+                        p.getLowStockThreshold(),
+                        p.getCategory() == null ? null : p.getCategory().getName()
+                ))
+                .toList();
     }
 }

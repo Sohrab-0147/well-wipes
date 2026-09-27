@@ -194,4 +194,46 @@ public class OrderService {
         }
         return order;
     }
+
+    @Transactional(readOnly = true)
+    public AnalyticsResponse getAnalytics(int days) {
+        java.time.Instant since = java.time.Instant.now().minus(days, java.time.temporal.ChronoUnit.DAYS);
+
+        java.util.List<Object[]> rawDaily = orderRepository.findDailyRevenue(since);
+        java.util.Map<java.time.LocalDate, long[]> byDate = new java.util.HashMap<>();
+        for (Object[] row : rawDaily) {
+            java.time.LocalDate day = ((java.sql.Date) row[0]).toLocalDate();
+            long count = ((Number) row[1]).longValue();
+            long revenue = ((Number) row[2]).longValue();
+            byDate.put(day, new long[]{count, revenue});
+        }
+
+        // Fill gaps so the chart has continuous days
+        java.util.List<DailyRevenue> daily = new java.util.ArrayList<>();
+        java.time.LocalDate today = java.time.LocalDate.now();
+        for (int i = days - 1; i >= 0; i--) {
+            java.time.LocalDate day = today.minusDays(i);
+            long[] v = byDate.getOrDefault(day, new long[]{0L, 0L});
+            daily.add(new DailyRevenue(day, v[0], v[1]));
+        }
+
+        java.util.List<Object[]> rawTop = orderRepository.findTopProducts(
+                org.springframework.data.domain.PageRequest.of(0, 5));
+        java.util.List<TopProduct> top = new java.util.ArrayList<>();
+        for (Object[] row : rawTop) {
+            top.add(new TopProduct(
+                    (java.util.UUID) row[0],
+                    (String) row[1],
+                    (String) row[2],
+                    ((Number) row[3]).longValue(),
+                    ((Number) row[4]).longValue()
+            ));
+        }
+
+        long totalRevenue = daily.stream().mapToLong(DailyRevenue::revenueCents).sum();
+        long totalOrders = daily.stream().mapToLong(DailyRevenue::orderCount).sum();
+        long aov = totalOrders == 0 ? 0 : totalRevenue / totalOrders;
+
+        return new AnalyticsResponse(daily, top, totalRevenue, totalOrders, aov, "INR");
+    }
 }

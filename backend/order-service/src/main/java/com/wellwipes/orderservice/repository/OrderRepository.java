@@ -32,4 +32,23 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     @Query("SELECT COALESCE(SUM(o.totalCents), 0) FROM Order o WHERE o.status = :status")
     long sumTotalByStatus(@Param("status") OrderStatus status);
+
+    @Query("""
+        SELECT FUNCTION('DATE', o.createdAt), COUNT(o), COALESCE(SUM(o.totalCents), 0)
+        FROM Order o
+        WHERE o.status IN ('PAID', 'SHIPPED', 'DELIVERED')
+          AND o.createdAt >= :since
+        GROUP BY FUNCTION('DATE', o.createdAt)
+        ORDER BY FUNCTION('DATE', o.createdAt) ASC
+    """)
+    java.util.List<Object[]> findDailyRevenue(@Param("since") java.time.Instant since);
+
+    @Query("""
+        SELECT i.productId, i.sku, i.name, SUM(i.quantity), SUM(i.subtotalCents)
+        FROM OrderItem i
+        WHERE i.order.status IN ('PAID', 'SHIPPED', 'DELIVERED')
+        GROUP BY i.productId, i.sku, i.name
+        ORDER BY SUM(i.quantity) DESC
+    """)
+    java.util.List<Object[]> findTopProducts(org.springframework.data.domain.Pageable pageable);
 }

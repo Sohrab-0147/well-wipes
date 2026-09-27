@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -22,6 +23,7 @@ const trustItems = [
 ];
 
 export function HomePage() {
+  usePageTitle('Everyday softness');
   useScrollReveal();
 
   const featured = useQuery({

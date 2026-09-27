@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Lock, ShieldCheck } from 'lucide-react';
@@ -19,6 +20,7 @@ const initialAddress = {
 };
 
 export function CheckoutPage() {
+  usePageTitle('Checkout');
   const { items, totalCents, clear } = useCartStore();
   const [address, setAddress] = useState(initialAddress);
   const [submitting, setSubmitting] = useState(false);

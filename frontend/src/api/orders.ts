@@ -88,3 +88,36 @@ export const adminOrderApi = {
     return res.data;
   },
 };
+
+
+export interface DailyRevenue {
+  date: string;
+  orderCount: number;
+  revenueCents: number;
+}
+
+export interface TopProduct {
+  productId: string;
+  sku: string;
+  name: string;
+  unitsSold: number;
+  revenueCents: number;
+}
+
+export interface AnalyticsResponse {
+  dailyRevenue: DailyRevenue[];
+  topProducts: TopProduct[];
+  totalRevenueCents: number;
+  totalOrders: number;
+  averageOrderValueCents: number;
+  currency: string;
+}
+
+export const analyticsApi = {
+  async get(days = 30): Promise<AnalyticsResponse> {
+    const res = await apiClient.get<AnalyticsResponse>('/api/v1/orders/admin/analytics', {
+      params: { days },
+    });
+    return res.data;
+  },
+};

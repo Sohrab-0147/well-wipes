@@ -55,6 +55,10 @@ public class Product {
     @Builder.Default
     private Integer stockQuantity = 0;
 
+    @Column(name = "low_stock_threshold", nullable = false)
+    @Builder.Default
+    private Integer lowStockThreshold = 10;
+
     @Column(name = "image_url", length = 512)
     private String imageUrl;
 

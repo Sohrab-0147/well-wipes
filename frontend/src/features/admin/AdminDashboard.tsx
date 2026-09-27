@@ -1,8 +1,11 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { ArrowRight, IndianRupee, Package, Receipt, TrendingUp } from 'lucide-react';
 import { adminOrderApi, type Order } from '@/api/orders';
 import { formatPrice } from '@/lib/utils';
+import { LowStockSection } from './LowStockSection';
+import { SalesAnalytics } from './SalesAnalytics';
 
 function statusClass(status: Order['status']) {
   switch (status) {
@@ -22,6 +25,7 @@ function statusClass(status: Order['status']) {
 }
 
 export function AdminDashboard() {
+  usePageTitle('Admin dashboard');
   const stats = useQuery({ queryKey: ['admin', 'stats'], queryFn: adminOrderApi.stats });
   const recent = useQuery({
     queryKey: ['admin', 'orders', 'recent'],
@@ -105,6 +109,10 @@ export function AdminDashboard() {
           </div>
         )}
       </div>
+
+      <SalesAnalytics />
+
+      <LowStockSection />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Download, MapPin } from 'lucide-react';
@@ -22,6 +23,7 @@ function statusClass(status: Order['status']) {
 }
 
 export function OrderDetailPage() {
+  usePageTitle('Order');
   const { id } = useParams<{ id: string }>();
   const { data: order, isLoading, error } = useQuery({
     queryKey: ['order', id],

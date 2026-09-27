@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { formatPrice } from '@/lib/utils';
 import { toast } from '@/lib/toastStore';
 
 export function AdminProductsPage() {
+  usePageTitle('Products');
   const [search, setSearch] = useState('');
   const qc = useQueryClient();
 

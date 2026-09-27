@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Minus, Plus, Trash2 } from 'lucide-react';
 import { useCartStore } from './cartStore';
@@ -6,6 +7,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { formatPrice } from '@/lib/utils';
 
 export function CartPage() {
+  usePageTitle('Cart');
   const { items, setQty, remove, totalCents } = useCartStore();
   const navigate = useNavigate();
 

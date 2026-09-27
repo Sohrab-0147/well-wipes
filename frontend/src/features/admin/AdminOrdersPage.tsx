@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -33,6 +34,7 @@ const FILTERS = [
 ];
 
 export function AdminOrdersPage() {
+  usePageTitle('Orders');
   const [status, setStatus] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(0);
 

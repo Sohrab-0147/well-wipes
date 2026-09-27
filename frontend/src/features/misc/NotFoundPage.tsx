@@ -1,8 +1,10 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Home } from 'lucide-react';
 import { StackMark } from '@/components/ProductImage';
 
 export function NotFoundPage() {
+  usePageTitle('Page not found');
   return (
     <div className="page-container flex min-h-[70vh] flex-col items-center justify-center py-20 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-4xl bg-gradient-to-br from-sky-tint to-mint-tint">

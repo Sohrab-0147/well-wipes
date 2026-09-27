@@ -1,8 +1,10 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Loader2, MessageCircle, Send, Sparkles } from 'lucide-react';
 import { apiClient } from '@/api/client';
 import { StackMark } from '@/components/ProductImage';
+import { AbdulAvatar } from './AbdulAvatar';
 import { cn } from '@/lib/utils';
 
 interface Source {
@@ -36,6 +38,7 @@ const SUGGESTIONS = [
 ];
 
 export function AiLandingPage() {
+  usePageTitle('Ask Abdul');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -83,8 +86,8 @@ export function AiLandingPage() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-sky-soft" />
         <div className="relative page-container py-20 text-center md:py-24">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-4xl bg-sky text-white shadow-glow">
-            <Sparkles className="h-8 w-8" />
+          <div className="mx-auto h-20 w-20 overflow-hidden rounded-4xl shadow-glow">
+            <AbdulAvatar className="h-full w-full rounded-4xl" />
           </div>
           <p className="eyebrow mt-8 text-sky">Meet Abdul</p>
           <h1 className="mx-auto mt-4 max-w-3xl text-4xl font-extrabold leading-tight md:text-6xl">
@@ -101,9 +104,7 @@ export function AiLandingPage() {
         <div className="mx-auto max-w-3xl overflow-hidden rounded-4xl border border-line bg-paper shadow-lift">
           {/* Header */}
           <div className="flex items-center gap-3 border-b border-line bg-gradient-to-r from-sky-tint via-paper to-mint-tint px-6 py-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky text-white shadow-glow-sm">
-              <StackMark className="h-5 w-5" />
-            </div>
+            <AbdulAvatar className="h-11 w-11" />
             <div className="flex-1">
               <p className="font-bold text-ink">Abdul · Well-Wipes</p>
               <p className="text-xs text-ink-soft">
@@ -150,9 +151,7 @@ export function AiLandingPage() {
 
             {loading && (
               <div className="flex items-start gap-4">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-sky text-white">
-                  <StackMark className="h-4 w-4" />
-                </div>
+                <AbdulAvatar className="h-9 w-9" />
                 <div className="flex items-center gap-2 rounded-2xl bg-slate-tint px-5 py-3 text-sm text-ink-soft">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Thinking…
@@ -214,9 +213,7 @@ function Bubble({ message }: { message: Message }) {
 
   return (
     <div className="flex items-start gap-4">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-sky text-white">
-        <StackMark className="h-4 w-4" />
-      </div>
+      <AbdulAvatar className="h-9 w-9" />
       <div className="flex-1 space-y-3">
         <div
           className={cn(

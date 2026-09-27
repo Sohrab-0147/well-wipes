@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -11,6 +12,7 @@ import { RecentlyViewed } from './RecentlyViewed';
 import { RelatedProducts } from './RelatedProducts';
 
 export function ProductDetailPage() {
+  usePageTitle(undefined);
   const { slug } = useParams<{ slug: string }>();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);

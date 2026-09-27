@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/lib/usePageTitle';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { cn } from '@/lib/utils';
 
 export function ProductsPage() {
+  usePageTitle('Shop');
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(0);
   const [categoryId, setCategoryId] = useState<string | undefined>();
