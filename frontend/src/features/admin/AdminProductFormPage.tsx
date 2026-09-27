@@ -8,6 +8,7 @@ import {
   type CreateProductInput,
 } from '@/api/products';
 import { toast } from '@/lib/toastStore';
+import { ImageUpload } from '@/components/ImageUpload';
 
 interface FormState {
   sku: string;
@@ -317,14 +318,28 @@ export function AdminProductFormPage() {
           <div className="mt-6 grid gap-5">
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-ink-mute">
-                Image URL
+                Product image
               </label>
-              <input
-                className="input"
-                value={form.imageUrl}
-                onChange={(e) => setField('imageUrl', e.target.value)}
-                placeholder="https://images.pexels.com/photos/…"
-              />
+              <div className="grid gap-4 sm:grid-cols-[200px_1fr]">
+                <ImageUpload
+                  value={form.imageUrl}
+                  onChange={(url) => setField('imageUrl', url)}
+                />
+                <div>
+                  <label className="mb-2 block text-[10px] font-semibold uppercase tracking-wider text-ink-mute">
+                    Or paste a URL
+                  </label>
+                  <input
+                    className="input text-xs"
+                    value={form.imageUrl}
+                    onChange={(e) => setField('imageUrl', e.target.value)}
+                    placeholder="https://…"
+                  />
+                  <p className="mt-2 text-[11px] text-ink-mute">
+                    Upload from your device, or paste an image URL from Pexels, Cloudinary, or your own host.
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex gap-6">
               <label className="flex cursor-pointer items-center gap-2 text-sm">
