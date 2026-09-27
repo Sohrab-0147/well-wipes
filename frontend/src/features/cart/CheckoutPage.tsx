@@ -26,6 +26,7 @@ export function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState<ValidateCouponResult | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'ONLINE' | 'COD'>('ONLINE');
   const [validating, setValidating] = useState(false);
   const navigate = useNavigate();
 
@@ -104,6 +105,7 @@ export function CheckoutPage() {
         items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         shippingAddress: address,
         couponCode: couponResult?.valid ? couponResult.code : undefined,
+        paymentMethod,
       });
 
       // Store for the success page to reconcile
@@ -112,13 +114,12 @@ export function CheckoutPage() {
       // Cart can be cleared — order is now in the backend
       clear();
 
-      if (order.checkoutUrl) {
-        window.location.href = order.checkoutUrl;
+      if (paymentMethod === 'COD' || !order.checkoutUrl) {
+        // COD: go directly to success page
+        navigate('/checkout/success');
       } else {
-        toast.error('Could not start payment', {
-          description: 'No checkout URL returned',
-        });
-        setSubmitting(false);
+        // Online: redirect to Stripe
+        window.location.href = order.checkoutUrl;
       }
     } catch (error: any) {
       const msg =
@@ -253,6 +254,55 @@ export function CheckoutPage() {
         <div className="lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-4xl border border-line bg-paper p-6 shadow-soft">
             <h2 className="text-lg font-bold text-ink">Order summary</h2>
+
+            {/* Payment method */}
+            <div className="mt-6 space-y-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-ink-mute">
+                Payment method
+              </label>
+
+              <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all ${
+                paymentMethod === 'ONLINE'
+                  ? 'border-sky bg-sky-tint/40'
+                  : 'border-line bg-paper hover:border-line-strong'
+              }`}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="ONLINE"
+                  checked={paymentMethod === 'ONLINE'}
+                  onChange={() => setPaymentMethod('ONLINE')}
+                  className="mt-1 h-4 w-4 border-line-strong text-sky focus:ring-sky"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-ink">Pay online</p>
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    UPI, cards, netbanking via Stripe
+                  </p>
+                </div>
+              </label>
+
+              <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-all ${
+                paymentMethod === 'COD'
+                  ? 'border-sky bg-sky-tint/40'
+                  : 'border-line bg-paper hover:border-line-strong'
+              }`}>
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value="COD"
+                  checked={paymentMethod === 'COD'}
+                  onChange={() => setPaymentMethod('COD')}
+                  className="mt-1 h-4 w-4 border-line-strong text-sky focus:ring-sky"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-ink">Cash on delivery</p>
+                  <p className="mt-0.5 text-xs text-ink-soft">
+                    Pay when your order arrives. No prepayment.
+                  </p>
+                </div>
+              </label>
+            </div>
 
             {/* Coupon input */}
             <div className="mt-6">

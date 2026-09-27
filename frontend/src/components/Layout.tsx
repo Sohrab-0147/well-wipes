@@ -55,20 +55,30 @@ export function Layout() {
             </span>
           </Link>
 
-          {/* 2. Search (desktop) — takes a comfortable, fixed width */}
+          {/* 2. Admin link — sits between logo and search, admins only */}
+          {user?.role === 'ADMIN' && (
+            <NavLink
+              to="/admin"
+              className="hidden shrink-0 items-center gap-1.5 text-sm font-medium whitespace-nowrap text-ink-soft transition-colors hover:text-sky sm:inline-flex"
+            >
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-clay" />
+              Admin
+            </NavLink>
+          )}
+
+          {/* 3. Search */}
           <div className="hidden md:block md:w-64 lg:w-80 xl:w-96">
             <NavSearch />
           </div>
 
-          {/* 3. Nav links */}
+          {/* 4. Nav links */}
           <nav className="hidden items-center gap-6 lg:flex">
             <NavLink to="/products" className={navLink}>Shop</NavLink>
             <NavLink to="/about" className={navLink}>Our story</NavLink>
             <NavLink to="/ai" className={navLink}>Ask Abdul</NavLink>
-            {user?.role === 'ADMIN' && <NavLink to="/admin" className={navLink}>Admin</NavLink>}
           </nav>
 
-          {/* 4. Actions pushed right */}
+          {/* 5. Actions pushed right */}
           <div className="ml-auto flex items-center gap-1.5">
             {/* Mobile search toggle */}
             <button

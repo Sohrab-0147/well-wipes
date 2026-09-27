@@ -89,6 +89,9 @@ export function OrdersPage() {
                 {order.items.length} {order.items.length === 1 ? 'item' : 'items'} ·{' '}
                 {order.items.map((i) => i.name).join(', ')}
               </p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-ink-mute">
+                {order.paymentMethod === 'COD' ? 'Cash on delivery' : 'Paid online'}
+              </p>
             </div>
 
             <div className="text-right">

@@ -21,13 +21,19 @@ export function CheckoutSuccessPage() {
 
     const run = async () => {
       try {
-        try {
-          await paymentApi.sync(orderId);
-        } catch {
-          // best-effort
-        }
         const result = await orderApi.get(orderId);
-        setOrder(result);
+        // Only sync online orders — COD has no Stripe session
+        if (result.paymentMethod === 'ONLINE') {
+          try {
+            await paymentApi.sync(orderId);
+            const refreshed = await orderApi.get(orderId);
+            setOrder(refreshed);
+          } catch {
+            setOrder(result);
+          }
+        } else {
+          setOrder(result);
+        }
         setState('done');
         sessionStorage.removeItem('ww_pending_order_id');
       } catch {
@@ -86,7 +92,9 @@ export function CheckoutSuccessPage() {
           Thank you, {firstName}.
         </h1>
         <p className="mt-4 text-lg text-ink-soft animate-fade-up animate-fade-up-delay-3">
-          Your order is on its way. We'll email you the tracking details shortly.
+          {order.paymentMethod === 'COD'
+            ? "We'll call you shortly to confirm your cash-on-delivery order."
+            : "Your order is on its way. We'll email you the tracking details shortly."}
         </p>
       </div>
 

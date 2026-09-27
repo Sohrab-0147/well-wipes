@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wellwipes.common.event.OrderPlacedEvent;
 import com.wellwipes.orderservice.client.PaymentClient;
 import com.wellwipes.orderservice.client.ProductClient;
-import com.wellwipes.orderservice.domain.Order;
-import com.wellwipes.orderservice.domain.OrderItem;
-import com.wellwipes.orderservice.domain.OrderStatus;
-import com.wellwipes.orderservice.domain.OutboxEvent;
+import com.wellwipes.orderservice.domain.*;
 import com.wellwipes.orderservice.dto.*;
 import com.wellwipes.orderservice.exception.InvalidOrderStateException;
 import com.wellwipes.orderservice.exception.OrderNotFoundException;
@@ -35,11 +32,13 @@ public class OrderService {
     private final ProductClient productClient;
     private final PaymentClient paymentClient;
     private final ObjectMapper objectMapper;
+    private final CouponService couponService;
 
     @Transactional
-    public OrderResponse create(UUID userId, String userEmail, String userFullName, String bearerToken, CreateOrderRequest request) {
+    public OrderResponse create(UUID userId, String userEmail, String userFullName,
+                                 String bearerToken, CreateOrderRequest request) {
         List<OrderItem> items = new ArrayList<>();
-        long totalCents = 0L;
+        long subtotalCents = 0L;
         String currency = "INR";
 
         for (CreateOrderItemRequest item : request.items()) {
@@ -47,8 +46,8 @@ public class OrderService {
             if (product == null || !Boolean.TRUE.equals(product.active())) {
                 throw new InvalidOrderStateException("Product unavailable: " + item.productId());
             }
-            long subtotal = product.priceCents() * item.quantity();
-            totalCents += subtotal;
+            long lineTotal = product.priceCents() * item.quantity();
+            subtotalCents += lineTotal;
             currency = product.currency();
 
             items.add(OrderItem.builder()
@@ -57,36 +56,38 @@ public class OrderService {
                     .name(product.name())
                     .unitPriceCents(product.priceCents())
                     .quantity(item.quantity())
-                    .subtotalCents(subtotal)
+                    .subtotalCents(lineTotal)
                     .build());
         }
+
+        long discountCents = 0L;
+        String couponCode = null;
+        if (request.couponCode() != null && !request.couponCode().isBlank()) {
+            couponCode = request.couponCode().trim().toUpperCase();
+            discountCents = couponService.applyCoupon(couponCode, subtotalCents);
+        }
+
+        long finalTotal = Math.max(0, subtotalCents - discountCents);
+
+        PaymentMethod paymentMethod = request.paymentMethod() != null
+                ? request.paymentMethod()
+                : PaymentMethod.ONLINE;
 
         Order order = Order.builder()
                 .userId(userId)
                 .status(OrderStatus.PENDING)
-                .totalCents(totalCents)
+                .paymentMethod(paymentMethod)
+                .subtotalCents(subtotalCents)
+                .discountCents(discountCents)
+                .couponCode(couponCode)
+                .totalCents(finalTotal)
                 .currency(currency)
                 .shippingAddress(request.shippingAddress() == null ? Map.of() : request.shippingAddress())
                 .build();
         items.forEach(order::addItem);
         Order saved = orderRepository.saveAndFlush(order);
 
-        List<Map<String, Object>> lineItems = new ArrayList<>();
-        for (OrderItem item : saved.getItems()) {
-            lineItems.add(Map.of(
-                    "sku", item.getSku(),
-                    "name", item.getName(),
-                    "unitPriceCents", item.getUnitPriceCents(),
-                    "quantity", item.getQuantity()
-            ));
-        }
-
-        PaymentClient.CheckoutResponse checkout = paymentClient.createCheckout(
-                bearerToken, saved.getId(), lineItems, currency);
-
-        saved.setStripeSessionId(checkout.sessionId());
-        orderRepository.save(saved);
-
+        // Publish OrderPlaced for both payment methods
         List<OrderPlacedEvent.Item> eventItems = saved.getItems().stream()
                 .map(i -> new OrderPlacedEvent.Item(
                         i.getProductId(), i.getSku(), i.getName(),
@@ -102,6 +103,29 @@ public class OrderService {
                 .eventType("OrderPlaced")
                 .payload(objectMapper.convertValue(event, Map.class))
                 .build());
+
+        // COD: no Stripe session
+        if (paymentMethod == PaymentMethod.COD) {
+            log.info("Order {} created with COD — skipping Stripe session", saved.getId());
+            return toResponse(saved, null);
+        }
+
+        // Online: create Stripe Checkout
+        List<Map<String, Object>> lineItems = new ArrayList<>();
+        for (OrderItem item : saved.getItems()) {
+            lineItems.add(Map.of(
+                    "sku", item.getSku(),
+                    "name", item.getName(),
+                    "unitPriceCents", item.getUnitPriceCents(),
+                    "quantity", item.getQuantity()
+            ));
+        }
+
+        PaymentClient.CheckoutResponse checkout = paymentClient.createCheckout(
+                bearerToken, saved.getId(), lineItems, currency);
+
+        saved.setStripeSessionId(checkout.sessionId());
+        orderRepository.save(saved);
 
         return toResponse(saved, checkout.checkoutUrl());
     }
@@ -120,6 +144,16 @@ public class OrderService {
             throw new org.springframework.security.access.AccessDeniedException("Not your order");
         }
         return toResponse(order, null);
+    }
+
+    @Transactional(readOnly = true)
+    public Order getEntityById(UUID orderId, UUID requesterId, boolean isAdmin) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found: " + orderId));
+        if (!isAdmin && !order.getUserId().equals(requesterId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Not your order");
+        }
+        return order;
     }
 
     @Transactional
@@ -162,20 +196,6 @@ public class OrderService {
         );
     }
 
-    public OrderResponse toResponse(Order order, String checkoutUrl) {
-        List<OrderItemResponse> itemResponses = order.getItems().stream()
-                .map(i -> new OrderItemResponse(
-                        i.getId(), i.getProductId(), i.getSku(), i.getName(),
-                        i.getUnitPriceCents(), i.getQuantity(), i.getSubtotalCents()))
-                .toList();
-        return new OrderResponse(
-                order.getId(), order.getUserId(), order.getStatus(),
-                order.getTotalCents(), order.getCurrency(), order.getShippingAddress(),
-                order.getStripeSessionId(), checkoutUrl,
-                itemResponses, order.getCreatedAt(), order.getUpdatedAt()
-        );
-    }
-
     @Transactional
     public OrderResponse updateStatus(UUID orderId, OrderStatus newStatus) {
         Order order = orderRepository.findWithItemsById(orderId)
@@ -183,16 +203,6 @@ public class OrderService {
         order.setStatus(newStatus);
         orderRepository.save(order);
         return toResponse(order, null);
-    }
-
-    @Transactional(readOnly = true)
-    public Order getEntityById(UUID orderId, UUID requesterId, boolean isAdmin) {
-        Order order = orderRepository.findWithItemsById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found: " + orderId));
-        if (!isAdmin && !order.getUserId().equals(requesterId)) {
-            throw new org.springframework.security.access.AccessDeniedException("Not your order");
-        }
-        return order;
     }
 
     @Transactional(readOnly = true)
@@ -208,8 +218,7 @@ public class OrderService {
             byDate.put(day, new long[]{count, revenue});
         }
 
-        // Fill gaps so the chart has continuous days
-        java.util.List<DailyRevenue> daily = new java.util.ArrayList<>();
+        List<DailyRevenue> daily = new ArrayList<>();
         java.time.LocalDate today = java.time.LocalDate.now();
         for (int i = days - 1; i >= 0; i--) {
             java.time.LocalDate day = today.minusDays(i);
@@ -217,9 +226,9 @@ public class OrderService {
             daily.add(new DailyRevenue(day, v[0], v[1]));
         }
 
-        java.util.List<Object[]> rawTop = orderRepository.findTopProducts(
+        List<Object[]> rawTop = orderRepository.findTopProducts(
                 org.springframework.data.domain.PageRequest.of(0, 5));
-        java.util.List<TopProduct> top = new java.util.ArrayList<>();
+        List<TopProduct> top = new ArrayList<>();
         for (Object[] row : rawTop) {
             top.add(new TopProduct(
                     (java.util.UUID) row[0],
@@ -235,5 +244,30 @@ public class OrderService {
         long aov = totalOrders == 0 ? 0 : totalRevenue / totalOrders;
 
         return new AnalyticsResponse(daily, top, totalRevenue, totalOrders, aov, "INR");
+    }
+
+    public OrderResponse toResponse(Order order, String checkoutUrl) {
+        List<OrderItemResponse> itemResponses = order.getItems().stream()
+                .map(i -> new OrderItemResponse(
+                        i.getId(), i.getProductId(), i.getSku(), i.getName(),
+                        i.getUnitPriceCents(), i.getQuantity(), i.getSubtotalCents()))
+                .toList();
+        return new OrderResponse(
+                order.getId(),
+                order.getUserId(),
+                order.getStatus(),
+                order.getPaymentMethod(),
+                order.getSubtotalCents(),
+                order.getDiscountCents(),
+                order.getCouponCode(),
+                order.getTotalCents(),
+                order.getCurrency(),
+                order.getShippingAddress(),
+                order.getStripeSessionId(),
+                checkoutUrl,
+                itemResponses,
+                order.getCreatedAt(),
+                order.getUpdatedAt()
+        );
     }
 }

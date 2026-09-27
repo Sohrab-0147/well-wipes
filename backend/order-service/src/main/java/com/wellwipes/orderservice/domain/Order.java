@@ -34,6 +34,21 @@ public class Order {
     @Builder.Default
     private OrderStatus status = OrderStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false, length = 16)
+    @Builder.Default
+    private PaymentMethod paymentMethod = PaymentMethod.ONLINE;
+
+    @Column(name = "subtotal_cents", nullable = false)
+    private Long subtotalCents;
+
+    @Column(name = "discount_cents", nullable = false)
+    @Builder.Default
+    private Long discountCents = 0L;
+
+    @Column(name = "coupon_code", length = 64)
+    private String couponCode;
+
     @Column(name = "total_cents", nullable = false)
     private Long totalCents;
 

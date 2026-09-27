@@ -33,8 +33,11 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(new AntPathRequestMatcher("/actuator/health")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/actuator/info")).permitAll()
+                .requestMatchers(
+                    new AntPathRequestMatcher("/actuator/health"),
+                    new AntPathRequestMatcher("/actuator/info"),
+                    new AntPathRequestMatcher("/api/v1/coupons/validate")
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth -> oauth.jwt(jwt ->

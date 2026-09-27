@@ -23,7 +23,7 @@ spring:
           - id: order-service
             uri: http://localhost:8084
             predicates:
-              - Path=/api/v1/orders/**
+              - Path=/api/v1/orders/**,/api/v1/coupons/**
           - id: admin-service
             uri: http://localhost:8086
             predicates:

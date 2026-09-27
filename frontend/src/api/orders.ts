@@ -4,6 +4,7 @@ export interface CreateOrderRequest {
   items: { productId: string; quantity: number }[];
   shippingAddress: Record<string, string>;
   couponCode?: string;
+  paymentMethod?: 'ONLINE' | 'COD';
 }
 
 export interface OrderItem {
@@ -20,6 +21,7 @@ export interface Order {
   id: string;
   userId: string;
   status: 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'EXPIRED' | 'SHIPPED' | 'DELIVERED';
+  paymentMethod: 'ONLINE' | 'COD';
   totalCents: number;
   currency: string;
   shippingAddress: Record<string, unknown>;
@@ -127,6 +129,8 @@ export const analyticsApi = {
 // ─────────────── Coupons ───────────────
 
 export type CouponType = 'PERCENT' | 'FIXED';
+
+export type PaymentMethod = 'ONLINE' | 'COD';
 
 export interface Coupon {
   id: string;

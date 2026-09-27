@@ -1,6 +1,7 @@
 package com.wellwipes.orderservice.dto;
 
 import com.wellwipes.orderservice.domain.OrderStatus;
+import com.wellwipes.orderservice.domain.PaymentMethod;
 
 import java.time.Instant;
 import java.util.List;
@@ -11,6 +12,10 @@ public record OrderResponse(
         UUID id,
         UUID userId,
         OrderStatus status,
+        PaymentMethod paymentMethod,
+        Long subtotalCents,
+        Long discountCents,
+        String couponCode,
         Long totalCents,
         String currency,
         Map<String, Object> shippingAddress,
