@@ -2,32 +2,27 @@ import { cn } from '@/lib/utils';
 
 interface LogoMarkProps {
   className?: string;
-  imageUrl?: string;
 }
 
-export function LogoMark({ className, imageUrl }: LogoMarkProps) {
+/**
+ * The Well-Wipes logo mark — stacked WW monogram on a blue gradient.
+ * Always renders the same way. To place it on a photo, put it inside
+ * a container that has a background image (see HomePage hero).
+ */
+export function LogoMark({ className }: LogoMarkProps) {
   return (
     <div
       className={cn(
         'relative flex items-center justify-center overflow-hidden rounded-2xl',
         className
       )}
-      style={
-        imageUrl
-          ? {
-              backgroundImage: `url(${imageUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }
-          : {
-              /* Clean deep-blue gradient — reads as brand blue, not mesh */
-              backgroundImage:
-                'linear-gradient(135deg, #0284c7 0%, #0369a1 55%, #075985 100%)',
-            }
-      }
+      style={{
+        backgroundImage:
+          'linear-gradient(135deg, #0284c7 0%, #0369a1 55%, #075985 100%)',
+      }}
       aria-hidden="true"
     >
-      {/* Soft top light for depth */}
+      {/* Soft top-light for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-black/15" />
 
       {/* Stacked WW monogram */}
@@ -62,11 +57,9 @@ export function LogoMark({ className, imageUrl }: LogoMarkProps) {
 export function Logo({
   className,
   size = 'md',
-  imageUrl,
 }: {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
-  imageUrl?: string;
 }) {
   const markSize = {
     sm: 'h-8 w-8',
@@ -82,7 +75,7 @@ export function Logo({
 
   return (
     <div className={cn('flex items-center gap-2.5', className)}>
-      <LogoMark className={markSize} imageUrl={imageUrl} />
+      <LogoMark className={markSize} />
       <span
         className={cn(
           'font-logo font-extrabold tracking-[-0.02em] text-ink',

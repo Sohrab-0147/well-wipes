@@ -1,9 +1,10 @@
-import { usePageTitle } from '@/lib/usePageTitle';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Download, MapPin } from 'lucide-react';
 import { orderApi, type Order } from '@/api/orders';
-import { formatPrice } from '@/lib/utils';
+import { apiClient } from '@/api/client';
+import { formatPrice, cn } from '@/lib/utils';
+import { toast } from '@/lib/toastStore';
 import { OrderTimeline } from './OrderTimeline';
 
 function statusClass(status: Order['status']) {
@@ -24,18 +25,56 @@ function statusClass(status: Order['status']) {
 }
 
 export function OrderDetailPage() {
-  usePageTitle('Order');
   const { id } = useParams<{ id: string }>();
+
   const { data: order, isLoading, error } = useQuery({
     queryKey: ['order', id],
     queryFn: () => orderApi.get(id!),
     enabled: !!id,
   });
 
+  const downloadInvoice = async () => {
+    if (!order) return;
+    try {
+      // Uses the axios client so the JWT interceptor auto-refreshes
+      // an expired access token before hitting the endpoint.
+      const res = await apiClient.get(
+        `/api/v1/orders/${order.id}/invoice`,
+        { responseType: 'blob' }
+      );
+
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${order.id.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Invoice downloaded');
+    } catch (e: unknown) {
+      console.error(e);
+      const status =
+        (e as { response?: { status?: number } })?.response?.status;
+      if (status === 404) {
+        toast.error('Invoice not available for this order');
+      } else if (status === 401 || status === 403) {
+        toast.error('Session expired', {
+          description: 'Please sign in again and retry.',
+        });
+      } else {
+        toast.error('Could not download invoice', {
+          description: 'Please try again in a moment.',
+        });
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="page-container py-16">
-        <div className="mx-auto max-w-2xl space-y-4">
+        <div className="mx-auto max-w-3xl space-y-4">
           <div className="h-32 animate-pulse rounded-4xl bg-slate-soft" />
           <div className="h-64 animate-pulse rounded-4xl bg-slate-soft" />
         </div>
@@ -54,27 +93,6 @@ export function OrderDetailPage() {
     );
   }
 
-  const downloadInvoice = async () => {
-    try {
-      const token = useAuthStore.getState().token;
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/orders/${order.id}/invoice`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!res.ok) throw new Error('Failed to fetch invoice');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice-${order.id.slice(0, 8)}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error(e);
-      alert('Could not download invoice');
-    }
-  };
-
   const addr = order.shippingAddress as Record<string, string>;
 
   return (
@@ -91,7 +109,7 @@ export function OrderDetailPage() {
           <h1 className="text-3xl font-extrabold md:text-4xl">
             Order #{order.id.slice(0, 8)}
           </h1>
-          <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${statusClass(order.status)}`}>
+          <span className={cn('rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider', statusClass(order.status))}>
             {order.status}
           </span>
           <button onClick={downloadInvoice} className="btn-secondary text-xs">

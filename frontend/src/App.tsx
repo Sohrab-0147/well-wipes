@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppRoutes } from './routes/AppRoutes';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toaster } from './components/Toaster';
+import { ScrollToTop } from './components/ScrollToTop';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +19,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollToTop />
         <ErrorBoundary>
           <AppRoutes />
           <Toaster />

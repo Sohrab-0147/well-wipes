@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, ArrowLeft, Lock, ShieldCheck, Tag, X } from 'lucide-react';
 import { useCartStore } from './cartStore';
 import { orderApi, couponApi, type ValidateCouponResult } from '@/api/orders';
+import { TrustBadges } from '@/components/TrustBadges';
 import { toast } from '@/lib/toastStore';
 import { formatPrice } from '@/lib/utils';
 import { EmptyState } from '@/components/EmptyState';
@@ -400,6 +401,10 @@ export function CheckoutPage() {
               <span className="text-2xl font-bold text-ink">
                 {formatPrice(total, currency)}
               </span>
+            </div>
+
+            <div className="mt-6">
+              <TrustBadges />
             </div>
 
             <button
