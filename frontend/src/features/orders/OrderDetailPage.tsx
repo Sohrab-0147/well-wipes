@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Download, MapPin } from 'lucide-react';
 import { orderApi, type Order } from '@/api/orders';
 import { formatPrice } from '@/lib/utils';
+import { OrderTimeline } from './OrderTimeline';
 
 function statusClass(status: Order['status']) {
   switch (status) {
@@ -108,6 +109,8 @@ export function OrderDetailPage() {
         </p>
 
         <div className="mt-10 space-y-6">
+          <OrderTimeline order={order} />
+
           {/* Items */}
           <div className="rounded-4xl border border-line bg-paper p-6 shadow-soft md:p-8">
             <h2 className="text-lg font-bold">Items</h2>
