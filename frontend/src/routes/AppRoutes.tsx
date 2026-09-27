@@ -18,6 +18,7 @@ import { AdminProductsPage } from '@/features/admin/AdminProductsPage';
 import { AdminProductFormPage } from '@/features/admin/AdminProductFormPage';
 import { AdminOrdersPage } from '@/features/admin/AdminOrdersPage';
 import { AdminOrderDetailPage } from '@/features/admin/AdminOrderDetailPage';
+import { AdminCouponsPage } from '@/features/admin/AdminCouponsPage';
 import { AboutPage } from '@/features/misc/AboutPage';
 import { AiLandingPage } from '@/features/ai/AiLandingPage';
 import { NotFoundPage } from '@/features/misc/NotFoundPage';
@@ -38,6 +39,7 @@ export function AppRoutes() {
           <Route path="/admin/products/:id/edit" element={<AdminProductFormPage />} />
           <Route path="/admin/orders" element={<AdminOrdersPage />} />
           <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+          <Route path="/admin/coupons" element={<AdminCouponsPage />} />
         </Route>
       </Route>
 

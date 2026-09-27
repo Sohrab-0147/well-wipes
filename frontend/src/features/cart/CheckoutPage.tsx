@@ -1,9 +1,9 @@
 import { usePageTitle } from '@/lib/usePageTitle';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Lock, ShieldCheck, Tag, X } from 'lucide-react';
 import { useCartStore } from './cartStore';
-import { orderApi } from '@/api/orders';
+import { orderApi, couponApi, type ValidateCouponResult } from '@/api/orders';
 import { toast } from '@/lib/toastStore';
 import { formatPrice } from '@/lib/utils';
 import { EmptyState } from '@/components/EmptyState';
@@ -24,6 +24,9 @@ export function CheckoutPage() {
   const { items, totalCents, clear } = useCartStore();
   const [address, setAddress] = useState(initialAddress);
   const [submitting, setSubmitting] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponResult, setCouponResult] = useState<ValidateCouponResult | null>(null);
+  const [validating, setValidating] = useState(false);
   const navigate = useNavigate();
 
   if (items.length === 0) {
@@ -42,7 +45,8 @@ export function CheckoutPage() {
   const subtotal = totalCents();
   const currency = items[0]?.currency ?? 'INR';
   const shippingCents = subtotal >= 49900 ? 0 : 4900;
-  const total = subtotal + shippingCents;
+  const discountCents = couponResult?.valid ? couponResult.discountCents : 0;
+  const total = Math.max(0, subtotal - discountCents) + shippingCents;
 
   const setField = (k: keyof typeof initialAddress, v: string) =>
     setAddress((a) => ({ ...a, [k]: v }));
@@ -58,6 +62,34 @@ export function CheckoutPage() {
     return null;
   };
 
+  const validateCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) {
+      setCouponResult(null);
+      return;
+    }
+    setValidating(true);
+    try {
+      const result = await couponApi.validate(code, subtotal);
+      setCouponResult(result);
+    } catch {
+      setCouponResult({
+        valid: false,
+        code,
+        message: 'Could not validate coupon',
+        discountCents: 0,
+        finalTotalCents: subtotal,
+      });
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setCouponCode('');
+    setCouponResult(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const err = validate();
@@ -71,6 +103,7 @@ export function CheckoutPage() {
       const order = await orderApi.create({
         items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         shippingAddress: address,
+        couponCode: couponResult?.valid ? couponResult.code : undefined,
       });
 
       // Store for the success page to reconcile
@@ -221,6 +254,56 @@ export function CheckoutPage() {
           <div className="rounded-4xl border border-line bg-paper p-6 shadow-soft">
             <h2 className="text-lg font-bold text-ink">Order summary</h2>
 
+            {/* Coupon input */}
+            <div className="mt-6">
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-ink-mute">
+                Have a coupon code?
+              </label>
+              {couponResult?.valid ? (
+                <div className="flex items-center justify-between gap-2 rounded-full border border-mint/40 bg-mint-tint px-4 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-3.5 w-3.5 text-mint-dark" />
+                    <span className="font-mono text-sm font-semibold text-mint-dark">
+                      {couponResult.code}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearCoupon}
+                    className="rounded-full p-1 text-mint-dark transition-colors hover:bg-paper/60"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="WELCOME10"
+                      className="input font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={validateCoupon}
+                      disabled={validating || !couponCode.trim()}
+                      className="btn-secondary text-sm whitespace-nowrap disabled:opacity-40"
+                    >
+                      {validating ? 'Checking…' : 'Apply'}
+                    </button>
+                  </div>
+                  {couponResult && !couponResult.valid && (
+                    <p className="mt-2 flex items-center gap-1 text-xs text-clay-dark">
+                      <AlertCircle className="h-3 w-3" />
+                      {couponResult.message}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+
             <div className="mt-6 space-y-3 border-b border-line pb-6">
               {items.map((item) => (
                 <div key={item.productId} className="flex justify-between gap-3 text-sm">
@@ -252,6 +335,14 @@ export function CheckoutPage() {
                   )}
                 </span>
               </div>
+              {discountCents > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-mint-dark">Coupon discount</span>
+                  <span className="font-semibold text-mint-dark">
+                    − {formatPrice(discountCents, currency)}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 flex items-baseline justify-between border-t border-line pt-6">

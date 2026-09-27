@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LayoutDashboard, LogOut, Package, Receipt } from 'lucide-react';
+import { ArrowLeft, LayoutDashboard, LogOut, Package, Receipt, Tag } from 'lucide-react';
 import { useAuthStore } from '@/features/auth/authStore';
 import { authApi } from '@/api/auth';
 import { toast } from '@/lib/toastStore';
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/products', label: 'Products', icon: Package, end: false },
   { to: '/admin/orders', label: 'Orders', icon: Receipt, end: false },
+  { to: '/admin/coupons', label: 'Coupons', icon: Tag, end: false },
 ];
 
 export function AdminLayout() {

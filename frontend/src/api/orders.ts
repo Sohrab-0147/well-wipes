@@ -3,6 +3,7 @@ import { apiClient } from './client';
 export interface CreateOrderRequest {
   items: { productId: string; quantity: number }[];
   shippingAddress: Record<string, string>;
+  couponCode?: string;
 }
 
 export interface OrderItem {
@@ -119,5 +120,80 @@ export const analyticsApi = {
       params: { days },
     });
     return res.data;
+  },
+};
+
+
+// ─────────────── Coupons ───────────────
+
+export type CouponType = 'PERCENT' | 'FIXED';
+
+export interface Coupon {
+  id: string;
+  code: string;
+  description: string | null;
+  type: CouponType;
+  value: number;
+  minOrderCents: number;
+  maxUses: number | null;
+  usedCount: number;
+  expiresAt: string | null;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CreateCouponInput {
+  code: string;
+  description?: string;
+  type: CouponType;
+  value: number;
+  minOrderCents: number;
+  maxUses?: number | null;
+  expiresAt?: string | null;
+  active?: boolean;
+}
+
+export interface UpdateCouponInput {
+  description?: string;
+  type?: CouponType;
+  value?: number;
+  minOrderCents?: number;
+  maxUses?: number | null;
+  expiresAt?: string | null;
+  active?: boolean;
+}
+
+export interface ValidateCouponResult {
+  valid: boolean;
+  code: string;
+  message: string;
+  discountCents: number;
+  finalTotalCents: number;
+}
+
+export const couponApi = {
+  async validate(code: string, subtotalCents: number): Promise<ValidateCouponResult> {
+    const res = await apiClient.get<ValidateCouponResult>('/api/v1/coupons/validate', {
+      params: { code, subtotalCents },
+    });
+    return res.data;
+  },
+};
+
+export const adminCouponApi = {
+  async list(): Promise<Coupon[]> {
+    const res = await apiClient.get<Coupon[]>('/api/v1/coupons');
+    return res.data;
+  },
+  async create(input: CreateCouponInput): Promise<Coupon> {
+    const res = await apiClient.post<Coupon>('/api/v1/coupons', input);
+    return res.data;
+  },
+  async update(id: string, input: UpdateCouponInput): Promise<Coupon> {
+    const res = await apiClient.patch<Coupon>(`/api/v1/coupons/${id}`, input);
+    return res.data;
+  },
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/api/v1/coupons/${id}`);
   },
 };
