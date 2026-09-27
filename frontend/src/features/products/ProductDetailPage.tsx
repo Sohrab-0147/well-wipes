@@ -10,6 +10,7 @@ import { ProductImage } from '@/components/ProductImage';
 import { useRecentlyViewedStore } from './recentlyViewedStore';
 import { RecentlyViewed } from './RecentlyViewed';
 import { RelatedProducts } from './RelatedProducts';
+import { ProductReviews } from './ProductReviews';
 
 export function ProductDetailPage() {
   usePageTitle(undefined);
@@ -187,6 +188,7 @@ export function ProductDetailPage() {
         </div>
       </div>
 
+      <ProductReviews productId={product.id} />
       <RelatedProducts categoryId={product.categoryId} excludeId={product.id} />
       <RecentlyViewed excludeId={product.id} />
     </div>
