@@ -324,7 +324,7 @@ export function Layout() {
 
           <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-line pt-8 text-xs text-ink-mute md:flex-row">
             <p>© {new Date().getFullYear()} Well-Wipes. All rights reserved.</p>
-            <p>Made with care in Coimbatore, India.</p>
+            <p>Made with care in Solapur, India.</p>
           </div>
         </div>
       </footer>

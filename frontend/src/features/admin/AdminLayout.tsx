@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, LayoutDashboard, LogOut, Menu, Package, Receipt, Tag, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Package,
+  Receipt,
+  Tag,
+  X,
+} from 'lucide-react';
 import { useAuthStore } from '@/features/auth/authStore';
+import { apiClient as _apiClient } from '@/api/client';
 import { authApi } from '@/api/auth';
 import { toast } from '@/lib/toastStore';
 import { cn } from '@/lib/utils';
-import { StackMark } from '@/components/ProductImage';
+import { LogoMark } from '@/components/Logo';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -18,36 +28,48 @@ export function AdminLayout() {
   const { user, clear } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const [open, setOpen] = useState(false);
 
-  // Close on route change
+  // Mobile: drawer open/close
+  const [mobileOpen, setMobileOpen] = useState(false);
+  // Desktop: sidebar collapsed/expanded
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+
+  // Close mobile drawer on route change
   useEffect(() => {
-    setOpen(false);
+    setMobileOpen(false);
   }, [location.pathname]);
 
-  // Close on Escape
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
+  // Escape closes mobile drawer
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') setMobileOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Lock body scroll when drawer is open on mobile
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
+  const handleHamburger = () => {
+    if (window.innerWidth >= 1024) {
+      setDesktopCollapsed((c) => !c);
     } else {
-      document.body.style.overflow = '';
+      setMobileOpen((o) => !o);
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [open]);
+  };
 
   const handleLogout = async () => {
-    try { await authApi.logout(); } catch { /* ignore */ }
+    try {
+      await authApi.logout();
+    } catch {
+      /* ignore */
+    }
     clear();
     toast.success('Signed out');
     navigate('/');
@@ -63,18 +85,17 @@ export function AdminLayout() {
 
   const sidebarContent = (
     <>
+      {/* Brand */}
       <div className="flex h-16 items-center gap-2.5 border-b border-line px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky text-white">
-          <StackMark className="h-5 w-5" />
-        </div>
+        <LogoMark className="h-9 w-9" />
         <div className="flex-1">
           <p className="text-sm font-bold leading-none">Well-Wipes</p>
-          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-mute">
+          <p className="mt-0.5 text-2xs font-semibold uppercase tracking-wider text-ink-mute">
             Admin
           </p>
         </div>
         <button
-          onClick={() => setOpen(false)}
+          onClick={() => setMobileOpen(false)}
           className="rounded-full p-2 text-ink-mute transition-colors hover:bg-slate-tint hover:text-ink lg:hidden"
           aria-label="Close menu"
         >
@@ -82,9 +103,16 @@ export function AdminLayout() {
         </button>
       </div>
 
+      {/* Nav */}
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {navItems.map(({ to, label, icon: Icon, end }) => (
-          <NavLink key={to} to={to} end={end} className={linkClass}>
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={linkClass}
+            onClick={() => setMobileOpen(false)}
+          >
             <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
             {label}
           </NavLink>
@@ -101,10 +129,11 @@ export function AdminLayout() {
         </div>
       </nav>
 
+      {/* User */}
       <div className="border-t border-line p-3">
         <div className="flex items-center gap-3 rounded-2xl px-3 py-2">
           {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="h-9 w-9 rounded-full" />
+            <img src={user.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
           ) : (
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky text-xs font-semibold text-white">
               {user?.email[0].toUpperCase()}
@@ -130,47 +159,54 @@ export function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-tint">
-      {/* Desktop sidebar — fixed, always visible on lg+ */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-line bg-paper lg:flex">
-        {sidebarContent}
+      {/* ── Desktop sidebar — collapsible ── */}
+      <aside
+        className={cn(
+          'hidden shrink-0 flex-col border-r border-line bg-paper transition-all duration-300 ease-smooth lg:flex',
+          desktopCollapsed ? 'w-0 overflow-hidden border-r-0' : 'w-64'
+        )}
+      >
+        <div className="flex h-full w-64 flex-col">
+          {sidebarContent}
+        </div>
       </aside>
 
-      {/* Mobile drawer — slides in from the left */}
+      {/* ── Mobile drawer ── */}
       <div
         className={cn(
-          'fixed inset-0 z-50 lg:hidden',
-          open ? 'pointer-events-auto' : 'pointer-events-none'
+          'fixed inset-0 z-[70] lg:hidden',
+          mobileOpen ? 'pointer-events-auto' : 'pointer-events-none'
         )}
-        aria-hidden={!open}
+        aria-hidden={!mobileOpen}
       >
         {/* Backdrop */}
         <div
-          onClick={() => setOpen(false)}
+          onClick={() => setMobileOpen(false)}
           className={cn(
             'absolute inset-0 bg-ink/40 backdrop-blur-sm transition-opacity duration-300',
-            open ? 'opacity-100' : 'opacity-0'
+            mobileOpen ? 'opacity-100' : 'opacity-0'
           )}
         />
 
-        {/* Drawer panel */}
+        {/* Panel */}
         <aside
           className={cn(
-            'absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col bg-paper shadow-lift transition-transform duration-300',
-            open ? 'translate-x-0' : '-translate-x-full'
+            'absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col bg-paper shadow-lift transition-transform duration-300 ease-smooth',
+            mobileOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
           {sidebarContent}
         </aside>
       </div>
 
-      {/* Main content */}
+      {/* ── Main content ── */}
       <div className="flex min-h-screen flex-1 flex-col">
-        {/* Top bar with hamburger on the LEFT */}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-paper px-4 lg:px-6">
+        {/* Top bar — hamburger always visible */}
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-line bg-paper/95 px-4 backdrop-blur-md lg:px-6">
           <button
-            onClick={() => setOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-line-strong bg-paper text-ink transition-all duration-300 hover:border-sky/60 hover:text-sky"
-            aria-label="Open menu"
+            onClick={handleHamburger}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-line-strong bg-paper text-ink transition-all duration-300 hover:border-sky/60 hover:bg-sky-tint/40 hover:text-sky"
+            aria-label="Toggle menu"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -193,7 +229,7 @@ export function AdminLayout() {
               <img
                 src={user.avatarUrl}
                 alt=""
-                className="h-8 w-8 rounded-full"
+                className="h-8 w-8 rounded-full object-cover"
               />
             )}
           </div>

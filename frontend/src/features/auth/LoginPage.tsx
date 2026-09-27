@@ -75,7 +75,7 @@ export function LoginPage() {
           </div>
 
           <p className="text-xs text-ink-mute">
-            © {new Date().getFullYear()} Well-Wipes. Made with care in Coimbatore.
+            © {new Date().getFullYear()} Well-Wipes. Made with care in Solapur.
           </p>
         </div>
 

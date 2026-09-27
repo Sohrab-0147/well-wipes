@@ -18,7 +18,7 @@ const values = [
   {
     icon: Users,
     title: 'Small team, real people',
-    body: 'We are four people in Coimbatore. Every order is packed by hand, by one of us.',
+    body: 'We are four people in Solapur. Every order is packed by hand, by one of us.',
   },
   {
     icon: Package,
@@ -89,7 +89,7 @@ export function AboutPage() {
                 <span className="text-sky">strong enough for real life</span>, and{' '}
                 <span className="text-sky">honest about what's in it</span>.
                 So we made it ourselves — and now we're shipping it from our little
-                workshop in Coimbatore to homes across India."
+                workshop in Solapur to homes across India."
               </blockquote>
 
               <div className="mt-10 flex items-center gap-4 border-t border-line pt-8">
@@ -99,7 +99,7 @@ export function AboutPage() {
                 <div>
                   <p className="font-hand text-3xl leading-none text-ink">Team Well-Wipes</p>
                   <p className="mt-1 text-xs font-medium uppercase tracking-wider text-ink-mute">
-                    Founders, Coimbatore
+                    Founders, Solapur
                   </p>
                 </div>
               </div>
