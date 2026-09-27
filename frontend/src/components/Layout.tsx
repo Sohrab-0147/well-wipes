@@ -8,6 +8,8 @@ import { toast } from '@/lib/toastStore';
 import { cn } from '@/lib/utils';
 import { StackMark } from './ProductImage';
 import { NavSearch } from './NavSearch';
+import { WhatsAppButton } from './WhatsAppButton';
+import { AiChatWidget } from '@/features/ai/AiChatWidget';
 
 export function Layout() {
   const { user, clear } = useAuthStore();
@@ -251,6 +253,8 @@ export function Layout() {
           </div>
         </div>
       </footer>
+      <WhatsAppButton />
+      <AiChatWidget />
     </div>
   );
 }

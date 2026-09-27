@@ -141,23 +141,30 @@ export function AiChatWidget() {
       <button
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-glow transition-all duration-300',
+          'group fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-glow transition-all duration-300',
           open
             ? 'bg-ink hover:bg-ink-soft'
             : 'bg-sky hover:bg-sky-dark hover:scale-105'
         )}
-        aria-label={open ? 'Close assistant' : 'Open assistant'}
+        aria-label={open ? 'Close assistant' : 'Ask Abdul'}
       >
         {open ? (
-          <X className="h-6 w-6" strokeWidth={2} />
+          <X className="h-5 w-5" strokeWidth={2} />
         ) : (
-          <MessageCircle className="h-6 w-6" strokeWidth={2} />
+          <>
+            <MessageCircle className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" strokeWidth={2} />
+            {/* Pulsing dot to signal "alive" */}
+            <span className="absolute right-0 top-0 flex h-3 w-3">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mint opacity-75" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-mint-dark" />
+            </span>
+          </>
         )}
       </button>
 
       <div
         className={cn(
-          'fixed bottom-24 right-6 z-50 flex w-[min(420px,calc(100vw-3rem))] flex-col overflow-hidden rounded-3xl border border-line bg-paper shadow-lift transition-all duration-300',
+          'fixed bottom-20 right-6 z-50 flex w-[min(400px,calc(100vw-3rem))] flex-col overflow-hidden rounded-3xl border border-line bg-paper shadow-lift transition-all duration-300',
           open
             ? 'pointer-events-auto translate-y-0 opacity-100'
             : 'pointer-events-none translate-y-4 opacity-0'

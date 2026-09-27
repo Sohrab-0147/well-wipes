@@ -140,7 +140,6 @@ export function AdminCouponsPage() {
         </button>
       </div>
 
-      {/* Form modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-4xl border border-line bg-paper shadow-lift">
@@ -163,7 +162,7 @@ export function AdminCouponsPage() {
                     Code *
                   </label>
                   <input
-                    className="input"
+                    className="input font-mono"
                     value={form.code}
                     onChange={(e) => setField('code', e.target.value.toUpperCase())}
                     placeholder="WELCOME10"
@@ -279,7 +278,6 @@ export function AdminCouponsPage() {
         </div>
       )}
 
-      {/* Table */}
       <div className="rounded-3xl border border-line bg-paper shadow-soft">
         {isLoading && (
           <div className="space-y-3 p-6">

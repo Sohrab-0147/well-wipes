@@ -64,7 +64,16 @@ export function AdminOrderDetailPage() {
   }
 
   const addr = order.shippingAddress as Record<string, string>;
-  const canMarkShipped = order.status === 'PAID';
+  const isCOD = order.paymentMethod === 'COD';
+  const isOnline = !isCOD;
+
+  // Ship permission matrix:
+  //  ONLINE: only after PAID (payment confirmed by Stripe webhook or sync)
+  //  COD:    any time from PENDING (admin confirms via phone, then ships)
+  const canMarkShipped =
+    (isOnline && order.status === 'PAID') ||
+    (isCOD && order.status === 'PENDING');
+
   const canMarkDelivered = order.status === 'SHIPPED';
   const canCancel = ['PENDING', 'PAID'].includes(order.status);
 
@@ -91,9 +100,17 @@ export function AdminOrderDetailPage() {
             })}
           </p>
         </div>
-        <span className={cn('rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider', statusClass(order.status))}>
-          {order.status}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={cn('rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider', statusClass(order.status))}>
+            {order.status}
+          </span>
+          <span className={cn(
+            'rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider',
+            isCOD ? 'bg-clay-tint text-clay-dark' : 'bg-sky-tint text-sky-dark'
+          )}>
+            {isCOD ? 'COD' : 'Paid online'}
+          </span>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -116,11 +133,27 @@ export function AdminOrderDetailPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-5 flex items-baseline justify-between border-t border-line pt-5">
-              <span className="font-semibold text-ink-soft">Total</span>
-              <span className="text-2xl font-bold text-ink">
-                {formatPrice(order.totalCents, order.currency)}
-              </span>
+
+            {/* Totals breakdown */}
+            <div className="mt-5 space-y-2 border-t border-line pt-5 text-sm">
+              <div className="flex justify-between text-ink-soft">
+                <span>Subtotal</span>
+                <span>{formatPrice(order.subtotalCents, order.currency)}</span>
+              </div>
+              {order.discountCents > 0 && (
+                <div className="flex justify-between text-mint-dark">
+                  <span>
+                    Discount {order.couponCode && <span className="font-mono">({order.couponCode})</span>}
+                  </span>
+                  <span>− {formatPrice(order.discountCents, order.currency)}</span>
+                </div>
+              )}
+              <div className="flex items-baseline justify-between border-t border-line pt-3">
+                <span className="font-semibold text-ink">Total</span>
+                <span className="text-xl font-bold text-ink">
+                  {formatPrice(order.totalCents, order.currency)}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -148,6 +181,30 @@ export function AdminOrderDetailPage() {
             </h2>
 
             <div className="mt-4 space-y-2">
+              {/* Waiting for payment message for ONLINE orders still PENDING */}
+              {isOnline && order.status === 'PENDING' && (
+                <div className="rounded-2xl border border-sky/30 bg-sky-tint/40 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-sky-dark">
+                    Awaiting payment
+                  </p>
+                  <p className="mt-1 text-xs text-ink-soft">
+                    Customer hasn't completed payment yet. Once Stripe confirms, you'll be able to ship.
+                  </p>
+                </div>
+              )}
+
+              {/* Waiting for admin confirmation for COD */}
+              {isCOD && order.status === 'PENDING' && (
+                <div className="rounded-2xl border border-clay/30 bg-clay-tint px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-clay-dark">
+                    Confirm with customer
+                  </p>
+                  <p className="mt-1 text-xs text-ink-soft">
+                    Call {addr.phone || 'the customer'} to confirm before shipping. Once confirmed, mark as shipped.
+                  </p>
+                </div>
+              )}
+
               {canMarkShipped && (
                 <button
                   onClick={() => updateStatus.mutate('SHIPPED')}
@@ -184,10 +241,10 @@ export function AdminOrderDetailPage() {
               )}
 
               {!canMarkShipped && !canMarkDelivered && !canCancel && (
-                <div className="rounded-2xl bg-slate-tint px-4 py-3 text-center">
-                  <Package className="mx-auto h-5 w-5 text-ink-mute" />
-                  <p className="mt-2 text-xs text-ink-soft">
-                    No actions available for this status
+                <div className="rounded-2xl bg-mint-tint px-4 py-3 text-center">
+                  <Package className="mx-auto h-5 w-5 text-mint-dark" />
+                  <p className="mt-2 text-xs text-mint-dark">
+                    This order is {order.status.toLowerCase()}. No further actions needed.
                   </p>
                 </div>
               )}
@@ -198,14 +255,20 @@ export function AdminOrderDetailPage() {
                 <span className="text-ink-mute">Order ID</span>
                 <span className="font-mono text-ink">{order.id.slice(0, 8)}</span>
               </div>
+              <div className="flex justify-between py-1">
+                <span className="text-ink-mute">Payment</span>
+                <span className="font-semibold text-ink">
+                  {isCOD ? 'Cash on delivery' : 'Online (Stripe)'}
+                </span>
+              </div>
               {order.stripeSessionId && (
                 <div className="flex justify-between py-1">
-                  <span className="text-ink-mute">Stripe session</span>
+                  <span className="text-ink-mute">Session</span>
                   <span className="font-mono text-ink">{order.stripeSessionId.slice(0, 14)}…</span>
                 </div>
               )}
               <div className="flex justify-between py-1">
-                <span className="text-ink-mute">Customer ID</span>
+                <span className="text-ink-mute">Customer</span>
                 <span className="font-mono text-ink">{order.userId.slice(0, 8)}</span>
               </div>
             </div>
