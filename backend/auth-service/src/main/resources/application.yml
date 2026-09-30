@@ -1,9 +1,16 @@
 server:
+  servlet:
+    session:
+      cookie:
+        name: WW_OAUTH_SESSION
+        same-site: none
+        secure: true
+        http-only: true
+  forward-headers-strategy: framework
   port: 8081
 
 spring:
   application:
-    name: auth-service
 
   datasource:
     url: jdbc:postgresql://localhost:5433/wellwipes_auth
@@ -42,7 +49,7 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "${OAUTH_REDIRECT_URI:http://localhost:8081/login/oauth2/code/google}"
             authorization-grant-type: authorization_code
         provider:
           google:

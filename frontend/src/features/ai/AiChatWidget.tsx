@@ -96,7 +96,7 @@ export function AiChatWidget() {
     setLoading(true);
 
     try {
-      const res = await apiClient.post<AskResponse>('/api/v1/ai/ask', {
+      const res = await apiClient.post<AskResponse>('/v1/ai/ask', {
         question: trimmed,
       });
 

@@ -39,7 +39,7 @@ export function OrderDetailPage() {
       // Uses the axios client so the JWT interceptor auto-refreshes
       // an expired access token before hitting the endpoint.
       const res = await apiClient.get(
-        `/api/v1/orders/${order.id}/invoice`,
+        `/v1/orders/${order.id}/invoice`,
         { responseType: 'blob' }
       );
 

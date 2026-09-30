@@ -24,8 +24,6 @@ import java.util.List;
 public class SecurityConfig {
 
     private final OAuth2SuccessHandler oauth2SuccessHandler;
-    private final JwtAuthenticationConverter wellWipesJwtAuthenticationConverter;
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -38,9 +36,20 @@ public class SecurityConfig {
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .oauth2Login(oauth -> oauth.successHandler(oauth2SuccessHandler))
+            .oauth2Login(oauth -> oauth
+                .successHandler(oauth2SuccessHandler)
+                .failureHandler((req, res, ex) -> {
+                    System.err.println("========== OAUTH2 LOGIN FAILED ==========");
+                    System.err.println("Exception: " + ex.getClass().getName());
+                    System.err.println("Message:   " + ex.getMessage());
+                    ex.printStackTrace(System.err);
+                    System.err.println("=========================================");
+                    String fe = System.getenv().getOrDefault("FRONTEND_REDIRECT", "http://localhost:5173/oauth/callback");
+                    res.sendRedirect(fe + "?error=" + java.net.URLEncoder.encode(ex.getMessage() == null ? "unknown" : ex.getMessage(), "UTF-8"));
+                })
+            )
             .oauth2ResourceServer(oauth -> oauth.jwt(jwt ->
-                jwt.jwtAuthenticationConverter(wellWipesJwtAuthenticationConverter)))
+                jwt.jwtAuthenticationConverter(buildAdminAwareConverter())))
             .exceptionHandling(ex -> ex
                 .defaultAuthenticationEntryPointFor(
                     new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
@@ -53,12 +62,26 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+        cfg.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://localhost:3000", "https://*.trycloudflare.com"));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
         src.registerCorsConfiguration("/**", cfg);
         return src;
+    }
+
+    private JwtAuthenticationConverter buildAdminAwareConverter() {
+        JwtAuthenticationConverter c = new JwtAuthenticationConverter();
+        c.setJwtGrantedAuthoritiesConverter(jwt -> {
+            String role = jwt.getClaimAsString("role");
+            if (role == null || role.isBlank()) {
+                return java.util.List.of();
+            }
+            return java.util.List.of(
+                new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role)
+            );
+        });
+        return c;
     }
 }

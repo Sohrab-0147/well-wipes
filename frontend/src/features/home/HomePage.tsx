@@ -34,7 +34,7 @@ const TISSUE_RANGES = [
   { slug: 'napkins', name: 'Napkins', tagline: 'Elegant, sturdy', icon: Heart, tint: 'from-mint-tint to-clay-tint', iconColor: 'text-mint-dark' },
 ];
 
-const HERO_IMAGE = '/promise.jpg';
+const HERO_IMAGE = 'https://images.pexels.com/photos/38357014/pexels-photo-38357014.jpeg?auto=compress&cs=tinysrgb&w=1200';
 const INITIAL_COUNT = 4;
 const PAGE_SIZE = 4;
 
@@ -168,40 +168,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ CATEGORIES — compact strip ═══════════════ */}
-      <section className="page-container section-pad-tight">
-        <div className="reveal mb-8 text-center">
-          <p className="eyebrow text-sky">What we make</p>
-          <h2 className="mt-2 text-2xl font-extrabold tracking-tight md:text-3xl">
-            Every kind of tissue
-          </h2>
-        </div>
-
-        <div className="reveal grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {TISSUE_RANGES.map((range) => {
-            const Icon = range.icon;
-            return (
-              <Link
-                key={range.slug}
-                to={`/products?category=${range.slug}`}
-                className="group flex flex-col items-center gap-3 rounded-3xl border border-line bg-paper p-5 text-center transition-all duration-300 hover:border-sky/40 hover:shadow-soft"
-              >
-                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${range.tint}`}>
-                  <Icon className={`h-5 w-5 ${range.iconColor}`} strokeWidth={1.8} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-ink transition-colors group-hover:text-sky">
-                    {range.name}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-ink-mute">{range.tagline}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ═══════════════ PRODUCTS ═══════════════ */}
+            {/* ═══════════════ PRODUCTS ═══════════════ */}
       <section className="bg-slate-tint">
         <div className="page-container section-pad">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
@@ -281,7 +248,40 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ PROMISE — compact ═══════════════ */}
+      {/* ═══════════════ CATEGORIES — compact strip ═══════════════ */}
+      <section className="page-container section-pad-tight">
+        <div className="reveal mb-8 text-center">
+          <p className="eyebrow text-sky">What we make</p>
+          <h2 className="mt-2 text-2xl font-extrabold tracking-tight md:text-3xl">
+            Every kind of tissue
+          </h2>
+        </div>
+
+        <div className="reveal grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {TISSUE_RANGES.map((range) => {
+            const Icon = range.icon;
+            return (
+              <Link
+                key={range.slug}
+                to={`/products?category=${range.slug}`}
+                className="group flex flex-col items-center gap-3 rounded-3xl border border-line bg-paper p-5 text-center transition-all duration-300 hover:border-sky/40 hover:shadow-soft"
+              >
+                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${range.tint}`}>
+                  <Icon className={`h-5 w-5 ${range.iconColor}`} strokeWidth={1.8} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-ink transition-colors group-hover:text-sky">
+                    {range.name}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-ink-mute">{range.tagline}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+{/* ═══════════════ PROMISE — compact ═══════════════ */}
       <section className="page-container section-pad">
         <div className="grid items-center gap-10 md:grid-cols-2">
           <div className="reveal relative">

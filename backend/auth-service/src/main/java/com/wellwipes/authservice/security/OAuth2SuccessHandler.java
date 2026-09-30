@@ -24,7 +24,7 @@ import java.io.IOException;
 @Slf4j
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-    private static final String FRONTEND_REDIRECT = "http://localhost:5173/oauth/callback";
+    private static final String FRONTEND_REDIRECT = System.getenv().getOrDefault("FRONTEND_REDIRECT", "http://localhost:5173/oauth/callback");
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
@@ -77,10 +77,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         Cookie refreshCookie = new Cookie("ww_refresh", refreshRaw);
         refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(false); // true in prod (HTTPS)
+        refreshCookie.setSecure(true);
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge((int) jwtService.refreshTokenTtlSeconds());
-        refreshCookie.setAttribute("SameSite", "Lax");
+        refreshCookie.setAttribute("SameSite", "None");
         response.addCookie(refreshCookie);
 
         String redirect = UriComponentsBuilder.fromUriString(FRONTEND_REDIRECT)

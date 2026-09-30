@@ -25,18 +25,18 @@ export interface CreateReviewInput {
 export const reviewApi = {
   async list(productId: string): Promise<ReviewSummary> {
     const res = await apiClient.get<ReviewSummary>(
-      `/api/v1/products/${productId}/reviews`
+      `/v1/products/${productId}/reviews`
     );
     return res.data;
   },
   async create(productId: string, input: CreateReviewInput): Promise<Review> {
     const res = await apiClient.post<Review>(
-      `/api/v1/products/${productId}/reviews`,
+      `/v1/products/${productId}/reviews`,
       input
     );
     return res.data;
   },
   async remove(productId: string, reviewId: string): Promise<void> {
-    await apiClient.delete(`/api/v1/products/${productId}/reviews/${reviewId}`);
+    await apiClient.delete(`/v1/products/${productId}/reviews/${reviewId}`);
   },
 };

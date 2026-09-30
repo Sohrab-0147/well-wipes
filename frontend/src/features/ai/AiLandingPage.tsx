@@ -52,7 +52,7 @@ export function AiLandingPage() {
     setLoading(true);
 
     try {
-      const res = await apiClient.post<AskResponse>('/api/v1/ai/ask', { question: trimmed });
+      const res = await apiClient.post<AskResponse>('/v1/ai/ask', { question: trimmed });
       setMessages((m) => [
         ...m,
         {

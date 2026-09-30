@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+source ~/auth-env.sh 2>/dev/null || true
 echo "═══════════════════════════════════════"
 echo "  Well-Wipes — full stack startup"
 echo "═══════════════════════════════════════"
@@ -31,6 +32,8 @@ for p in 8080 8081 8082 8083 8084 8085 8086 8087; do
 done
 sleep 3
 echo "  ✔ Ports 8080-8087 cleared"
+docker exec -i wellwipes-redis redis-cli FLUSHALL >/dev/null 2>&1 || true
+echo "  ✔ Redis cache flushed"
 
 echo ""
 echo "▸ 4/6  Building backend..."

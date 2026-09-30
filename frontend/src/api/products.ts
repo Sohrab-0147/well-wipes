@@ -52,15 +52,15 @@ export interface Page<T> {
 
 export const productApi = {
   async list(params: { page?: number; size?: number; categoryId?: string; q?: string } = {}) {
-    const res = await apiClient.get<Page<ProductSummary>>('/api/v1/products', { params });
+    const res = await apiClient.get<Page<ProductSummary>>('/v1/products', { params });
     return res.data;
   },
   async getBySlug(slug: string) {
-    const res = await apiClient.get<Product>(`/api/v1/products/${slug}`);
+    const res = await apiClient.get<Product>(`/v1/products/${slug}`);
     return res.data;
   },
   async categories() {
-    const res = await apiClient.get<Category[]>('/api/v1/categories');
+    const res = await apiClient.get<Category[]>('/v1/categories');
     return res.data;
   },
 };
@@ -98,25 +98,25 @@ export interface UpdateProductInput {
 
 export const adminProductApi = {
   async list(page = 0, size = 50): Promise<Page<ProductSummary>> {
-    const res = await apiClient.get<Page<ProductSummary>>('/api/v1/products/admin', {
+    const res = await apiClient.get<Page<ProductSummary>>('/v1/products/admin', {
       params: { page, size },
     });
     return res.data;
   },
   async get(id: string): Promise<Product> {
-    const res = await apiClient.get<Product>(`/api/v1/products/id/${id}`);
+    const res = await apiClient.get<Product>(`/v1/products/id/${id}`);
     return res.data;
   },
   async create(input: CreateProductInput): Promise<Product> {
-    const res = await apiClient.post<Product>('/api/v1/products', input);
+    const res = await apiClient.post<Product>('/v1/products', input);
     return res.data;
   },
   async update(id: string, input: UpdateProductInput): Promise<Product> {
-    const res = await apiClient.patch<Product>(`/api/v1/products/${id}`, input);
+    const res = await apiClient.patch<Product>(`/v1/products/${id}`, input);
     return res.data;
   },
   async remove(id: string): Promise<void> {
-    await apiClient.delete(`/api/v1/products/${id}`);
+    await apiClient.delete(`/v1/products/${id}`);
   },
 };
 
@@ -133,7 +133,7 @@ export interface LowStockItem {
 
 export const lowStockApi = {
   async list(): Promise<LowStockItem[]> {
-    const res = await apiClient.get<LowStockItem[]>('/api/v1/products/admin/low-stock');
+    const res = await apiClient.get<LowStockItem[]>('/v1/products/admin/low-stock');
     return res.data;
   },
 };

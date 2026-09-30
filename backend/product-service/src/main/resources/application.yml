@@ -2,6 +2,8 @@ server:
   port: 8082
 
 spring:
+  cache:
+    type: none
   application:
     name: product-service
 
@@ -43,12 +45,6 @@ spring:
           max-idle: 8
           min-idle: 2
 
-  cache:
-    type: redis
-    redis:
-      time-to-live: 600000
-
-wellwipes:
   jwt:
     secret: ${JWT_SECRET}
     issuer: well-wipes-auth
@@ -66,3 +62,8 @@ logging:
   level:
     com.wellwipes.productservice: DEBUG
     org.springframework.cache: DEBUG
+
+wellwipes:
+  jwt:
+    secret: zbp9Y3PoIchzyL5R8oqExCjZr61D5vHCdbBu3Mp5g+3mWadCz/T/ZunaanmGXoCd
+    issuer: well-wipes-auth

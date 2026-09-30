@@ -42,26 +42,26 @@ export interface OrderPage {
 
 export const orderApi = {
   async create(request: CreateOrderRequest): Promise<Order> {
-    const res = await apiClient.post<Order>('/api/v1/orders', request);
+    const res = await apiClient.post<Order>('/v1/orders', request);
     return res.data;
   },
   async list(page = 0, size = 20): Promise<OrderPage> {
-    const res = await apiClient.get<OrderPage>('/api/v1/orders', { params: { page, size } });
+    const res = await apiClient.get<OrderPage>('/v1/orders', { params: { page, size } });
     return res.data;
   },
   async get(id: string): Promise<Order> {
-    const res = await apiClient.get<Order>(`/api/v1/orders/${id}`);
+    const res = await apiClient.get<Order>(`/v1/orders/${id}`);
     return res.data;
   },
   async cancel(id: string): Promise<Order> {
-    const res = await apiClient.patch<Order>(`/api/v1/orders/${id}/cancel`);
+    const res = await apiClient.patch<Order>(`/v1/orders/${id}/cancel`);
     return res.data;
   },
 };
 
 export const paymentApi = {
   async sync(orderId: string): Promise<void> {
-    await apiClient.post(`/api/v1/payments/sync/${orderId}`);
+    await apiClient.post(`/v1/payments/sync/${orderId}`);
   },
 };
 
@@ -77,17 +77,17 @@ export interface OrderStats {
 
 export const adminOrderApi = {
   async list(page = 0, size = 20, status?: string): Promise<OrderPage> {
-    const res = await apiClient.get<OrderPage>('/api/v1/orders/admin', {
+    const res = await apiClient.get<OrderPage>('/v1/orders/admin', {
       params: { page, size, status },
     });
     return res.data;
   },
   async stats(): Promise<OrderStats> {
-    const res = await apiClient.get<OrderStats>('/api/v1/orders/admin/stats');
+    const res = await apiClient.get<OrderStats>('/v1/orders/admin/stats');
     return res.data;
   },
   async updateStatus(id: string, status: string): Promise<Order> {
-    const res = await apiClient.patch<Order>(`/api/v1/orders/admin/${id}/status`, { status });
+    const res = await apiClient.patch<Order>(`/v1/orders/admin/${id}/status`, { status });
     return res.data;
   },
 };
@@ -118,7 +118,7 @@ export interface AnalyticsResponse {
 
 export const analyticsApi = {
   async get(days = 30): Promise<AnalyticsResponse> {
-    const res = await apiClient.get<AnalyticsResponse>('/api/v1/orders/admin/analytics', {
+    const res = await apiClient.get<AnalyticsResponse>('/v1/orders/admin/analytics', {
       params: { days },
     });
     return res.data;
@@ -177,7 +177,7 @@ export interface ValidateCouponResult {
 
 export const couponApi = {
   async validate(code: string, subtotalCents: number): Promise<ValidateCouponResult> {
-    const res = await apiClient.get<ValidateCouponResult>('/api/v1/coupons/validate', {
+    const res = await apiClient.get<ValidateCouponResult>('/v1/coupons/validate', {
       params: { code, subtotalCents },
     });
     return res.data;
@@ -186,18 +186,18 @@ export const couponApi = {
 
 export const adminCouponApi = {
   async list(): Promise<Coupon[]> {
-    const res = await apiClient.get<Coupon[]>('/api/v1/coupons');
+    const res = await apiClient.get<Coupon[]>('/v1/coupons');
     return res.data;
   },
   async create(input: CreateCouponInput): Promise<Coupon> {
-    const res = await apiClient.post<Coupon>('/api/v1/coupons', input);
+    const res = await apiClient.post<Coupon>('/v1/coupons', input);
     return res.data;
   },
   async update(id: string, input: UpdateCouponInput): Promise<Coupon> {
-    const res = await apiClient.patch<Coupon>(`/api/v1/coupons/${id}`, input);
+    const res = await apiClient.patch<Coupon>(`/v1/coupons/${id}`, input);
     return res.data;
   },
   async remove(id: string): Promise<void> {
-    await apiClient.delete(`/api/v1/coupons/${id}`);
+    await apiClient.delete(`/v1/coupons/${id}`);
   },
 };

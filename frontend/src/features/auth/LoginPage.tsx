@@ -18,7 +18,7 @@ export function LoginPage() {
   const error = params.get('error');
 
   const handleLogin = () => {
-    window.location.href = `${AUTH_URL}/oauth2/authorization/google`;
+    window.location.href = `/oauth2/authorization/google`;
   };
 
   const errorMessage =

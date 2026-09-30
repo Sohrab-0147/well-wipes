@@ -22,7 +22,7 @@ let refreshing: Promise<string | null> | null = null;
 async function refreshToken(): Promise<string | null> {
   try {
     const res = await axios.post(
-      `${API_BASE}/api/v1/auth/refresh`,
+      `${API_BASE}/v1/auth/refresh`,
       {},
       { withCredentials: true }
     );
