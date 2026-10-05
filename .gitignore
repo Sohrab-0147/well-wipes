@@ -11,3 +11,7 @@ dist/
 .DS_Store
 *.log
 logs/
+
+# Local production env (contains secrets)
+.env.prod.local
+.env.*.local

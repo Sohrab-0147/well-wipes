@@ -48,8 +48,8 @@ wellwipes:
   stripe:
     secret-key: ${STRIPE_SECRET_KEY}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET}
-    success-url: http://localhost:5173/checkout/success?session_id={CHECKOUT_SESSION_ID}
-    cancel-url: http://localhost:5173/checkout/cancel
+    success-url: ${FRONTEND_URL:http://localhost:5173}/checkout/success?session_id={CHECKOUT_SESSION_ID}
+    cancel-url: ${FRONTEND_URL:http://localhost:5173}/checkout/cancel
 
 management:
   endpoints:

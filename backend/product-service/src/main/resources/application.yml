@@ -64,6 +64,3 @@ logging:
     org.springframework.cache: DEBUG
 
 wellwipes:
-  jwt:
-    secret: zbp9Y3PoIchzyL5R8oqExCjZr61D5vHCdbBu3Mp5g+3mWadCz/T/ZunaanmGXoCd
-    issuer: well-wipes-auth

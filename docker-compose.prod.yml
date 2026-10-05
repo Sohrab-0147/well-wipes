@@ -1,0 +1,228 @@
+services:
+  # ─── Databases ───
+  postgres-auth:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wellwipes_auth
+      POSTGRES_USER: wellwipes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: [postgres-auth-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wellwipes"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  postgres-product:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wellwipes_product
+      POSTGRES_USER: wellwipes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: [postgres-product-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wellwipes"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  postgres-order:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wellwipes_order
+      POSTGRES_USER: wellwipes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: [postgres-order-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wellwipes"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  postgres-ai:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wellwipes_ai
+      POSTGRES_USER: wellwipes
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: [postgres-ai-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wellwipes"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes: [redis-data:/data]
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  kafka:
+    image: apache/kafka:3.7.0
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+    volumes: [kafka-data:/var/lib/kafka/data]
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  # ─── Services ───
+  auth-service:
+    build: ./backend/auth-service
+    environment:
+      WELLWIPES_JWT_ISSUER: well-wipes-auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/wellwipes_auth
+      SPRING_DATASOURCE_USERNAME: wellwipes
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      FRONTEND_REDIRECT: ${FRONTEND_REDIRECT}
+      OAUTH_REDIRECT_URI: ${OAUTH_REDIRECT_URI}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+    depends_on:
+      postgres-auth: { condition: service_healthy }
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  product-service:
+    build: ./backend/product-service
+    environment:
+      WELLWIPES_JWT_ISSUER: well-wipes-auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-product:5432/wellwipes_product
+      SPRING_DATASOURCE_USERNAME: wellwipes
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      WELLWIPES_JWT_SECRET: ${JWT_SECRET}
+      SPRING_CACHE_TYPE: none
+    depends_on:
+      postgres-product: { condition: service_healthy }
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  order-service:
+    build: ./backend/order-service
+    environment:
+      WELLWIPES_JWT_ISSUER: well-wipes-auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-order:5432/wellwipes_order
+      SPRING_DATASOURCE_USERNAME: wellwipes
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      WELLWIPES_JWT_SECRET: ${JWT_SECRET}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      postgres-order: { condition: service_healthy }
+      kafka: { condition: service_started }
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  payment-service:
+    build: ./backend/payment-service
+    environment:
+      WELLWIPES_JWT_ISSUER: well-wipes-auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-order:5432/wellwipes_order
+      SPRING_DATASOURCE_USERNAME: wellwipes
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      WELLWIPES_JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      postgres-order: { condition: service_healthy }
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  notification-service:
+    build: ./backend/notification-service
+    environment:
+      WELLWIPES_JWT_ISSUER: well-wipes-auth
+      JWT_SECRET: ${JWT_SECRET}
+      WELLWIPES_JWT_SECRET: ${JWT_SECRET}
+      MANAGEMENT_HEALTH_MAIL_ENABLED: "false"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      kafka: { condition: service_started }
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  admin-service:
+    build: ./backend/admin-service
+    environment:
+      WELLWIPES_JWT_ISSUER: well-wipes-auth
+      JWT_SECRET: ${JWT_SECRET}
+      WELLWIPES_JWT_SECRET: ${JWT_SECRET}
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  ai-service:
+    build: ./backend/ai-service
+    environment:
+      WELLWIPES_JWT_ISSUER: well-wipes-auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-ai:5432/wellwipes_ai
+      SPRING_DATASOURCE_USERNAME: wellwipes
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      WELLWIPES_JWT_SECRET: ${JWT_SECRET}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      SPRING_AI_OLLAMA_BASE_URL: http://localhost:11434
+    depends_on:
+      postgres-ai: { condition: service_healthy }
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  api-gateway:
+    build: ./backend/api-gateway
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8081
+      PRODUCT_SERVICE_URL: http://product-service:8082
+      PAYMENT_SERVICE_URL: http://payment-service:8083
+      ORDER_SERVICE_URL: http://order-service:8084
+      NOTIFICATION_SERVICE_URL: http://notification-service:8085
+      ADMIN_SERVICE_URL: http://admin-service:8086
+      AI_SERVICE_URL: http://ai-service:8087
+    depends_on: [auth-service, product-service, order-service]
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
+    networks: [wellwipes]
+
+  nginx:
+    image: nginx:alpine
+    ports: ["8080:80"]
+    volumes:
+      - ./infra/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+    depends_on: [frontend, api-gateway]
+    restart: unless-stopped
+    networks: [wellwipes]
+
+networks:
+  wellwipes: { driver: bridge }
+
+volumes:
+  postgres-auth-data:
+  postgres-product-data:
+  postgres-order-data:
+  postgres-ai-data:
+  redis-data:
+  kafka-data:
